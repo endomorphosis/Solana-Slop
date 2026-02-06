@@ -1,0 +1,22 @@
+{
+  "name": "solana-testnet-boilerplate",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "ping": "node --loader ts-node/esm src/ping.ts",
+    "balance": "node --loader ts-node/esm src/balance.ts",
+    "gen-keypair": "node --loader ts-node/esm src/gen-keypair.ts",
+    "simulate-self-tx": "node --loader ts-node/esm src/simulate-self-tx.ts"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.98.4",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.7.3"
+  }
+}
