@@ -216,10 +216,10 @@ export type LitigationStatus = "in_trial" | "in_appeal" | "awaiting_decision" | 
 export interface LitigationCase {
   /** Campaign ID */
   campaignId: string;
-  /** Client public key */
-  client: PublicKeyLike;
-  /** Attorney public key */
-  attorney: PublicKeyLike;
+  /** Client public key (optional if proposal data is missing) */
+  client?: PublicKeyLike;
+  /** Attorney public key (optional if proposal data is missing) */
+  attorney?: PublicKeyLike;
   /** Current campaign status */
   status: CampaignStatus;
   /** Current litigation status */

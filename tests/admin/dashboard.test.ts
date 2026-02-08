@@ -189,17 +189,17 @@ describe("AdminDashboard", () => {
     });
 
     it("should register a campaign", () => {
-      dashboard.registerCampaign(campaign, "campaign1");
+      dashboard.registerCampaign(campaign, "campaign1", config);
       
       const retrieved = dashboard.getCampaign("campaign1");
       expect(retrieved).toBe(campaign);
     });
 
     it("should not allow duplicate campaign registration", () => {
-      dashboard.registerCampaign(campaign, "campaign1");
+      dashboard.registerCampaign(campaign, "campaign1", config);
       
       expect(() => {
-        dashboard.registerCampaign(campaign, "campaign1");
+        dashboard.registerCampaign(campaign, "campaign1", config);
       }).toThrow("Campaign already registered");
     });
 
@@ -207,8 +207,8 @@ describe("AdminDashboard", () => {
       const config2 = { ...config, id: "campaign2" };
       const campaign2 = new Campaign(config2, clock);
 
-      dashboard.registerCampaign(campaign, "campaign1");
-      dashboard.registerCampaign(campaign2, "campaign2");
+      dashboard.registerCampaign(campaign, "campaign1", config);
+      dashboard.registerCampaign(campaign2, "campaign2", config2);
 
       const campaigns = dashboard.listCampaigns();
       expect(campaigns).toHaveLength(2);
@@ -220,8 +220,8 @@ describe("AdminDashboard", () => {
       const config2 = { ...config, id: "campaign2" };
       const campaign2 = new Campaign(config2, clock);
 
-      dashboard.registerCampaign(campaign, "campaign1");
-      dashboard.registerCampaign(campaign2, "campaign2");
+      dashboard.registerCampaign(campaign, "campaign1", config);
+      dashboard.registerCampaign(campaign2, "campaign2", config2);
 
       // Make campaign1 locked
       campaign.contribute("user1", 1000);
@@ -236,7 +236,25 @@ describe("AdminDashboard", () => {
     });
 
     it("should get campaign summary", () => {
-      dashboard.registerCampaign(campaign, "campaign1");
+      dashboard.registerCampaign(campaign, "campaign1", config);
+      dashboard.recordTransaction({
+        id: "tx1",
+        timestamp: 1000,
+        type: "contribution",
+        amount: 500,
+        from: "user1",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
+      dashboard.recordTransaction({
+        id: "tx2",
+        timestamp: 1100,
+        type: "contribution",
+        amount: 600,
+        from: "user2",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
       campaign.contribute("user1", 500);
       campaign.contribute("user2", 600);
 
@@ -246,6 +264,10 @@ describe("AdminDashboard", () => {
       expect(summary?.id).toBe("campaign1");
       expect(summary?.status).toBe("active");
       expect(summary?.totalRaised).toBe(1100);
+      expect(summary?.minRaiseLamports).toBe(1000);
+      expect(summary?.deadlineUnix).toBe(2000);
+      expect(summary?.contributorCount).toBe(2);
+      expect(summary?.signers).toEqual(["attorney1", "platform1", "client1"]);
     });
   });
 
@@ -359,9 +381,9 @@ describe("AdminDashboard", () => {
       const campaign2 = new Campaign({ ...config, id: "campaign2" }, clock);
       const campaign3 = new Campaign({ ...config, id: "campaign3", minRaiseLamports: 500 }, clock);
 
-      dashboard.registerCampaign(campaign1, "campaign1");
-      dashboard.registerCampaign(campaign2, "campaign2");
-      dashboard.registerCampaign(campaign3, "campaign3");
+      dashboard.registerCampaign(campaign1, "campaign1", config);
+      dashboard.registerCampaign(campaign2, "campaign2", { ...config, id: "campaign2" });
+      dashboard.registerCampaign(campaign3, "campaign3", { ...config, id: "campaign3", minRaiseLamports: 500 });
 
       // Make campaign1 successful
       campaign1.contribute("user1", 1200);
@@ -394,7 +416,7 @@ describe("AdminDashboard", () => {
 
     it("should calculate DAO fees correctly", () => {
       const campaign1 = new Campaign(config, clock);
-      dashboard.registerCampaign(campaign1, "campaign1");
+      dashboard.registerCampaign(campaign1, "campaign1", config);
 
       campaign1.contribute("user1", 1000);
       clock.setTime(2001);
@@ -433,7 +455,7 @@ describe("AdminDashboard", () => {
         daoTreasury: "dao_treasury"
       };
       campaign = new Campaign(config, clock);
-      dashboard.registerCampaign(campaign, "campaign1");
+      dashboard.registerCampaign(campaign, "campaign1", config);
     });
 
     it("should get user profile with cross-linked data", () => {
@@ -580,7 +602,7 @@ describe("AdminDashboard", () => {
     it("should calculate average contribution across multiple campaigns", () => {
       const config2 = { ...config, id: "campaign2" };
       const campaign2 = new Campaign(config2, clock);
-      dashboard.registerCampaign(campaign2, "campaign2");
+      dashboard.registerCampaign(campaign2, "campaign2", config2);
       dashboard.registerAccount("user1", "user", "User One", "user1@example.com");
 
       // Contribute to campaign1
@@ -749,7 +771,7 @@ describe("AdminDashboard", () => {
         daoTreasury: "dao_treasury"
       };
       campaign = new Campaign(config, clock);
-      dashboard.registerCampaign(campaign, "campaign1");
+      dashboard.registerCampaign(campaign, "campaign1", config);
       
       // Register accounts
       dashboard.registerAccount("attorney1", "attorney", "Attorney One", "attorney1@example.com");
@@ -776,15 +798,17 @@ describe("AdminDashboard", () => {
       expect(cases[0].currentOutcome).toBe("win");
     });
 
-    it("should not include campaigns without litigation activity", () => {
-      // Campaign is locked but no outcome recorded yet
+    it("should include locked campaigns in trial status", () => {
+      // Campaign is locked but no outcome recorded yet (in trial)
       campaign.contribute("user1", 1000);
       clock.setTime(2001);
       campaign.evaluate();
 
       const cases = dashboard.getActiveLitigationCases();
 
-      expect(cases).toHaveLength(0);
+      expect(cases).toHaveLength(1);
+      expect(cases[0].litigationStatus).toBe("in_trial");
+      expect(cases[0].currentOutcome).toBeNull();
     });
 
     it("should track appeal rounds in litigation cases", () => {
@@ -840,7 +864,7 @@ describe("AdminDashboard", () => {
       // Create multiple campaigns at different court levels
       const config2 = { ...config, id: "campaign2" };
       const campaign2 = new Campaign(config2, clock);
-      dashboard.registerCampaign(campaign2, "campaign2");
+      dashboard.registerCampaign(campaign2, "campaign2", config2);
       
       dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Case 1");
       dashboard.submitProposal("campaign2", "client1", "attorney1", 1000, 2000, "Case 2");

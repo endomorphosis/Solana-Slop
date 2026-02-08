@@ -1,5 +1,5 @@
 import { Campaign } from "../crowdfunding/campaign.js";
-import type { PublicKeyLike, Clock } from "../crowdfunding/types.js";
+import type { PublicKeyLike, Clock, CampaignConfig, CampaignStatus } from "../crowdfunding/types.js";
 import type {
   AccountInfo,
   AccountType,
@@ -16,11 +16,21 @@ import type {
 } from "./types.js";
 
 /**
+ * Campaign metadata stored alongside campaign instances
+ */
+interface CampaignMetadata {
+  campaign: Campaign;
+  config: CampaignConfig;
+  contributorCount: number;
+  contributors: Set<PublicKeyLike>;
+}
+
+/**
  * AdminDashboard manages campaigns, accounts, and provides oversight capabilities
  * for reviewing proposals, tracking transactions, and managing the crowdfunding platform.
  */
 export class AdminDashboard {
-  private readonly campaigns = new Map<string, Campaign>();
+  private readonly campaigns = new Map<string, CampaignMetadata>();
   private readonly accounts = new Map<PublicKeyLike, AccountInfo>();
   private readonly proposals = new Map<string, ProposalReview>();
   private readonly transactions: TransactionRecord[] = [];
@@ -182,18 +192,23 @@ export class AdminDashboard {
   /**
    * Register a campaign in the dashboard
    */
-  registerCampaign(campaign: Campaign, campaignId: string): void {
+  registerCampaign(campaign: Campaign, campaignId: string, config: CampaignConfig): void {
     if (this.campaigns.has(campaignId)) {
       throw new Error("Campaign already registered");
     }
-    this.campaigns.set(campaignId, campaign);
+    this.campaigns.set(campaignId, {
+      campaign,
+      config,
+      contributorCount: 0,
+      contributors: new Set()
+    });
   }
 
   /**
    * Get a specific campaign
    */
   getCampaign(campaignId: string): Campaign | undefined {
-    return this.campaigns.get(campaignId);
+    return this.campaigns.get(campaignId)?.campaign;
   }
 
   /**
@@ -207,34 +222,36 @@ export class AdminDashboard {
    * Get campaign summary information
    */
   getCampaignSummary(campaignId: string): CampaignSummary | undefined {
-    const campaign = this.campaigns.get(campaignId);
-    if (!campaign) {
+    const metadata = this.campaigns.get(campaignId);
+    if (!metadata) {
       return undefined;
     }
 
-    // Access campaign data through public methods
+    const { campaign, config, contributorCount } = metadata;
+
+    // Access campaign data through public methods and stored config
     return {
       id: campaignId,
       status: campaign.getStatus(),
       outcome: campaign.getOutcome(),
       totalRaised: campaign.getTotalRaised(),
-      minRaiseLamports: 0, // Would need to expose config
-      deadlineUnix: 0, // Would need to expose config
-      contributorCount: 0, // Would need to track this
+      minRaiseLamports: config.minRaiseLamports,
+      deadlineUnix: config.deadlineUnix,
+      contributorCount,
       availableFunds: campaign.getAvailableFunds(),
       daoFeeAmount: campaign.getDaoFeeAmount(),
       currentRound: campaign.getCurrentRound(),
-      signers: [] // Would need to expose config
+      signers: config.signers
     };
   }
 
   /**
    * List campaigns by status
    */
-  listCampaignsByStatus(status: string): string[] {
+  listCampaignsByStatus(status: CampaignStatus): string[] {
     const result: string[] = [];
-    for (const [id, campaign] of this.campaigns.entries()) {
-      if (campaign.getStatus() === status) {
+    for (const [id, metadata] of this.campaigns.entries()) {
+      if (metadata.campaign.getStatus() === status) {
         result.push(id);
       }
     }
@@ -245,12 +262,38 @@ export class AdminDashboard {
    * Record a transaction
    */
   recordTransaction(transaction: TransactionRecord): void {
+    // Persist transaction
     this.transactions.push(transaction);
     
-    // Update account statistics
-    const fromAccount = this.accounts.get(transaction.from);
-    if (fromAccount && transaction.type === "contribution") {
-      fromAccount.totalContributed += transaction.amount;
+    // Update account statistics for contribution transactions
+    if (transaction.type === "contribution") {
+      const fromAccount = this.accounts.get(transaction.from);
+      if (fromAccount) {
+        fromAccount.totalContributed += transaction.amount;
+
+        // Increment campaignsParticipated only on the first contribution
+        // from this account to this specific campaign
+        if (transaction.campaignId) {
+          const hasContributedBefore = this.transactions.some(
+            (tx) =>
+              tx !== transaction &&
+              tx.type === "contribution" &&
+              tx.from === transaction.from &&
+              tx.campaignId === transaction.campaignId
+          );
+
+          if (!hasContributedBefore) {
+            fromAccount.campaignsParticipated += 1;
+          }
+        }
+      }
+
+      // Update campaign contributor tracking
+      const metadata = this.campaigns.get(transaction.campaignId);
+      if (metadata && !metadata.contributors.has(transaction.from)) {
+        metadata.contributors.add(transaction.from);
+        metadata.contributorCount++;
+      }
     }
   }
 
@@ -281,7 +324,7 @@ export class AdminDashboard {
    * Get dashboard statistics
    */
   getDashboardStats(): DashboardStats {
-    const campaigns = Array.from(this.campaigns.values());
+    const campaignMetadatas = Array.from(this.campaigns.values());
     
     let activeCampaigns = 0;
     let successfulCampaigns = 0;
@@ -289,7 +332,8 @@ export class AdminDashboard {
     let totalRaised = 0;
     let totalDaoFees = 0;
 
-    for (const campaign of campaigns) {
+    for (const metadata of campaignMetadatas) {
+      const campaign = metadata.campaign;
       const status = campaign.getStatus();
       
       if (status === "active" || status === "appeal_active") {
@@ -400,8 +444,9 @@ export class AdminDashboard {
     let wonCampaigns = 0;
 
     for (const campaignId of userCampaigns) {
-      const campaign = this.campaigns.get(campaignId);
-      if (campaign) {
+      const metadata = this.campaigns.get(campaignId);
+      if (metadata) {
+        const campaign = metadata.campaign;
         const status = campaign.getStatus();
         if (status === "active" || status === "appeal_active" || status === "locked") {
           activeCampaigns++;
@@ -524,11 +569,13 @@ export class AdminDashboard {
     const lowerQuery = query.toLowerCase();
     const allAccounts = type ? this.listAccounts(type) : this.listAccounts();
     
-    return allAccounts.filter(acc => 
-      acc.name.toLowerCase().includes(lowerQuery) ||
-      acc.email.toLowerCase().includes(lowerQuery) ||
-      acc.publicKey.toLowerCase().includes(lowerQuery)
-    );
+    return allAccounts.filter(acc => {
+      const nameMatches = acc.name.toLowerCase().includes(lowerQuery);
+      const emailMatches = acc.email.toLowerCase().includes(lowerQuery);
+      const publicKeyStr = acc.publicKey != null ? String(acc.publicKey).toLowerCase() : "";
+      const publicKeyMatches = publicKeyStr.includes(lowerQuery);
+      return nameMatches || emailMatches || publicKeyMatches;
+    });
   }
 
   /**
@@ -537,18 +584,20 @@ export class AdminDashboard {
   getActiveLitigationCases(): LitigationCase[] {
     const cases: LitigationCase[] = [];
 
-    for (const [campaignId, campaign] of this.campaigns.entries()) {
+    for (const [campaignId, metadata] of this.campaigns.entries()) {
+      const campaign = metadata.campaign;
       const status = campaign.getStatus();
       const outcome = campaign.getOutcome();
       const appealRounds = campaign.getAppealRounds();
       
-      // Check if campaign has completed fundraising and has litigation activity
+      // Check if campaign has completed fundraising and is in litigation
+      // Include locked campaigns even without outcome/appeals (in_trial state)
       const hasCompletedFundraising = status === "locked" || status === "won" || 
                                        status === "lost" || status === "settled" || 
                                        status === "appeal_active";
-      const hasLitigationActivity = outcome !== null || appealRounds.length > 0;
+      const isInLitigation = hasCompletedFundraising; // All completed campaigns are potentially in litigation
 
-      if (hasCompletedFundraising && hasLitigationActivity) {
+      if (isInLitigation) {
         const litigationCase = this.buildLitigationCase(campaignId, campaign);
         cases.push(litigationCase);
       }
@@ -561,16 +610,20 @@ export class AdminDashboard {
    * Get detailed case information for a specific campaign
    */
   getCaseDetails(campaignId: string): LitigationCase | undefined {
-    const campaign = this.campaigns.get(campaignId);
-    if (!campaign) {
+    const metadata = this.campaigns.get(campaignId);
+    if (!metadata) {
       return undefined;
     }
 
-    const outcome = campaign.getOutcome();
-    const appealRounds = campaign.getAppealRounds();
+    const campaign = metadata.campaign;
+    const status = campaign.getStatus();
     
-    // Only return case details if there's litigation activity
-    if (outcome === null && appealRounds.length === 0) {
+    // Return case details for any completed campaign (including in_trial)
+    const hasCompletedFundraising = status === "locked" || status === "won" || 
+                                     status === "lost" || status === "settled" || 
+                                     status === "appeal_active";
+    
+    if (!hasCompletedFundraising) {
       return undefined;
     }
 
@@ -650,8 +703,8 @@ export class AdminDashboard {
     
     return {
       campaignId,
-      client: proposal?.client || "",
-      attorney: proposal?.attorney || "",
+      client: proposal?.client,
+      attorney: proposal?.attorney,
       status,
       litigationStatus,
       currentOutcome: outcome,

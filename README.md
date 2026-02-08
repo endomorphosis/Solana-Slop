@@ -207,14 +207,17 @@ dashboard.approveProposal("campaign1", "admin_wallet", "Approved");
 // or
 dashboard.rejectProposal("campaign1", "admin_wallet", "Insufficient details");
 
-// Register and monitor campaigns
+// Register and monitor campaigns (now requires config for full tracking)
 const campaign = new Campaign(config, clock);
-dashboard.registerCampaign(campaign, "campaign1");
+dashboard.registerCampaign(campaign, "campaign1", config);
 
-// Get campaign summary
+// Get campaign summary (now includes real config data)
 const summary = dashboard.getCampaignSummary("campaign1");
+console.log(`Min raise: ${summary.minRaiseLamports}`);
+console.log(`Deadline: ${summary.deadlineUnix}`);
+console.log(`Contributors: ${summary.contributorCount}`);
 
-// Track transactions
+// Track transactions (now updates campaignsParticipated)
 dashboard.recordTransaction({
   id: "tx1",
   timestamp: Date.now(),
@@ -230,7 +233,7 @@ const stats = dashboard.getDashboardStats();
 console.log(`Total raised: ${stats.totalRaised}`);
 console.log(`Pending proposals: ${stats.pendingProposals}`);
 
-// Query data
+// Query data (now type-safe with CampaignStatus)
 const pendingProposals = dashboard.listProposals("pending");
 const activeCampaigns = dashboard.listCampaignsByStatus("active");
 const walletTxs = dashboard.getWalletTransactions("user1");
@@ -304,6 +307,13 @@ The web interface provides:
 - **Transactions tab**: View complete transaction history by wallet or campaign
 
 *Note: The web interface is a frontend demo. In production, connect it to the AdminDashboard API via a backend service.*
+
+### Accessibility
+The web interface includes ARIA attributes for improved accessibility:
+- Tab navigation with `role="tablist"`, `role="tab"`, and `role="tabpanel"`
+- Proper `aria-selected` states for active tabs
+- `aria-labelledby` and `aria-controls` linking tabs to panels
+- Keyboard navigation support for screen readers
 
 ## Ping Solana testnet
 ```bash

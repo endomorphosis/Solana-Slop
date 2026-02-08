@@ -320,18 +320,18 @@
             <p class="subtitle">Solana Crowdfunding Platform Management</p>
         </header>
 
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('overview', event)">📊 Overview</button>
-            <button class="nav-tab" onclick="switchTab('proposals', event)">📋 Proposals</button>
-            <button class="nav-tab" onclick="switchTab('campaigns', event)">💰 Campaigns</button>
-            <button class="nav-tab" onclick="switchTab('case-management', event)">⚖️ Case Management</button>
-            <button class="nav-tab" onclick="switchTab('accounts', event)">👥 Accounts</button>
-            <button class="nav-tab" onclick="switchTab('user-profiles', event)">👤 User Profiles</button>
-            <button class="nav-tab" onclick="switchTab('transactions', event)">💸 Transactions</button>
+        <div class="nav-tabs" role="tablist">
+            <button id="tab-overview" class="nav-tab active" role="tab" aria-selected="true" aria-controls="overview" onclick="switchTab('overview', event)">📊 Overview</button>
+            <button id="tab-proposals" class="nav-tab" role="tab" aria-selected="false" aria-controls="proposals" onclick="switchTab('proposals', event)">📋 Proposals</button>
+            <button id="tab-campaigns" class="nav-tab" role="tab" aria-selected="false" aria-controls="campaigns" onclick="switchTab('campaigns', event)">💰 Campaigns</button>
+            <button id="tab-case-management" class="nav-tab" role="tab" aria-selected="false" aria-controls="case-management" onclick="switchTab('case-management', event)">⚖️ Case Management</button>
+            <button id="tab-accounts" class="nav-tab" role="tab" aria-selected="false" aria-controls="accounts" onclick="switchTab('accounts', event)">👥 Accounts</button>
+            <button id="tab-user-profiles" class="nav-tab" role="tab" aria-selected="false" aria-controls="user-profiles" onclick="switchTab('user-profiles', event)">👤 User Profiles</button>
+            <button id="tab-transactions" class="nav-tab" role="tab" aria-selected="false" aria-controls="transactions" onclick="switchTab('transactions', event)">💸 Transactions</button>
         </div>
 
         <!-- Overview Tab -->
-        <div id="overview" class="tab-content active">
+        <div id="overview" class="tab-content active" role="tabpanel" aria-labelledby="tab-overview">
             <div class="stats-grid">
                 <div class="stat-card">
                     <div class="stat-value" id="total-campaigns">0</div>
@@ -436,7 +436,7 @@
         </div>
 
         <!-- Case Management Tab -->
-        <div id="case-management" class="tab-content">
+        <div id="case-management" class="tab-content" role="tabpanel" aria-labelledby="tab-case-management">
             <div class="card">
                 <h2>⚖️ Active Litigation Cases</h2>
                 <p style="color: #666; margin-bottom: 20px;">
@@ -567,7 +567,7 @@
         </div>
 
         <!-- User Profiles Tab -->
-        <div id="user-profiles" class="tab-content">
+        <div id="user-profiles" class="tab-content" role="tabpanel" aria-labelledby="tab-user-profiles">
             <div class="card">
                 <h2>User Profile Analysis</h2>
                 <div class="filter-group">
@@ -701,13 +701,17 @@
 
             // Deactivate all tabs
             const tabs = document.querySelectorAll('.nav-tab');
-            tabs.forEach(tab => tab.classList.remove('active'));
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
+            });
 
             // Show selected tab
             document.getElementById(tabName).classList.add('active');
 
             // Activate selected tab button
             event.target.classList.add('active');
+            event.target.setAttribute('aria-selected', 'true');
         }
 
         // Filter functionality for proposals
@@ -755,11 +759,9 @@
 
         // Filter functionality for case management
         function filterCases(status, event) {
-            const buttons = document.querySelectorAll('#case-management .filter-btn');
-            buttons.forEach(btn => {
-                if (btn.textContent.toLowerCase().includes('court')) return; // Skip court level buttons
-                btn.classList.remove('active');
-            });
+            // Limit active-state changes to the status filter group only
+            const statusButtons = event.target.parentElement.querySelectorAll('.filter-btn');
+            statusButtons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
             
             console.log('Filtering cases by status:', status);
