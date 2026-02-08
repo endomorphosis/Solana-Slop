@@ -1,0 +1,130 @@
+{
+  "name": "118-complex-final-stress-test",
+  "description": "Maximum complexity stress test",
+  "initialFunding": 600000,
+  "minRaise": 400000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 600000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 200000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 100000,
+      "timestamp": 2100
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 100000,
+      "timestamp": 2200
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 90000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 2300
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 4500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 100000,
+      "courtLevel": "district",
+      "path": "retrial",
+      "deadline": 7000,
+      "timestamp": 4600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 220000,
+      "timestamp": 6500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 20000,
+      "timestamp": 6600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "client"
+      ],
+      "estimatedCost": 110000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 9000,
+      "timestamp": 6700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 150000,
+      "timestamp": 8500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 150000,
+      "timestamp": 8600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 280000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 13000,
+      "timestamp": 8700
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 200000,
+      "timestamp": 9000
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 13100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "state_supreme",
+      "timestamp": 14000
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": "Ultimate stress test: maximum events and complexity"
+}

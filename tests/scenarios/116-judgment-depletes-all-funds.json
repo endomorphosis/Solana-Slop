@@ -1,0 +1,32 @@
+{
+  "name": "116-judgment-depletes-all-funds",
+  "description": "Judgment takes everything",
+  "initialFunding": 120000,
+  "minRaise": 80000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 120000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 108000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 108000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Judgment depletes all available"
+}

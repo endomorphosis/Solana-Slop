@@ -1,0 +1,32 @@
+{
+  "name": "94-extremely-long-case",
+  "description": "20 year litigation",
+  "initialFunding": 400000,
+  "minRaise": 250000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 400000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 150000,
+      "timestamp": 630720000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 150000,
+      "timestamp": 630820000
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Extreme duration test: 20 years"
+}

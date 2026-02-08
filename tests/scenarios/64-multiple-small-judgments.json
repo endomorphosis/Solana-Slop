@@ -1,0 +1,80 @@
+{
+  "name": "64-multiple-small-judgments",
+  "description": "Multiple small judgments add up",
+  "initialFunding": 200000,
+  "minRaise": 130000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 200000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 15000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 15000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 55000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 20000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 20000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 3700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 25000,
+      "timestamp": 5500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 25000,
+      "timestamp": 5600
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

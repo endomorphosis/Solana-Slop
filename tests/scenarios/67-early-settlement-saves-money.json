@@ -1,0 +1,39 @@
+{
+  "name": "67-early-settlement-saves-money",
+  "description": "Early settlement prevents appeals",
+  "initialFunding": 160000,
+  "minRaise": 110000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 160000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 45000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 45000,
+      "timestamp": 2100
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "appellate",
+      "timestamp": 2300,
+      "comment": "Settled immediately after district loss"
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": ""
+}

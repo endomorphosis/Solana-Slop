@@ -1,0 +1,77 @@
+{
+  "name": "49-award-depletes-then-refills",
+  "description": "Award depletes then refills funds",
+  "initialFunding": 130000,
+  "minRaise": 90000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 130000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 70000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 70000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 150000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 2200
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 120000,
+      "timestamp": 2500
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 5100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 180000,
+      "timestamp": 6000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 180000,
+      "timestamp": 6100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform"
+      ],
+      "estimatedCost": 85000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 8000,
+      "timestamp": 6200
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": ""
+}

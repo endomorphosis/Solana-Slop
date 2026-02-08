@@ -1,0 +1,27 @@
+{
+  "name": "69-zero-judgment-win",
+  "description": "Win with zero judgment amount",
+  "initialFunding": 100000,
+  "minRaise": 75000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 100000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 0,
+      "timestamp": 2000
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Edge case: declaratory judgment with no monetary award"
+}

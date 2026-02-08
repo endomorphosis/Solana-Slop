@@ -1,0 +1,86 @@
+{
+  "name": "104-multiple-paths-same-court",
+  "description": "Return to same court via different paths",
+  "initialFunding": 260000,
+  "minRaise": 170000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 260000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 95000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 95000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 65000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 3500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "district",
+      "path": "retrial",
+      "deadline": 6000,
+      "timestamp": 3600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 75000,
+      "timestamp": 5500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 75000,
+      "timestamp": 5600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 85000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 8000,
+      "timestamp": 5700
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Revisit courts via different paths"
+}

@@ -1,0 +1,32 @@
+{
+  "name": "101-equal-funding-and-judgment",
+  "description": "Perfect balance",
+  "initialFunding": 200000,
+  "minRaise": 130000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 200000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 180000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 180000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Judgment equals available funds"
+}

@@ -1,0 +1,43 @@
+{
+  "name": "97-single-signer-win-appeal",
+  "description": "Only one signer for win appeal",
+  "initialFunding": 170000,
+  "minRaise": 115000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 170000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 75000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 75000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "client"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Single signer approval for win"
+}

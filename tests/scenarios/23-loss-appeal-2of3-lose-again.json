@@ -1,0 +1,56 @@
+{
+  "name": "23-loss-appeal-2of3-lose-again",
+  "description": "Loss, 2/3 approve appeal, lose again on appeal",
+  "initialFunding": 200000,
+  "minRaise": 130000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 200000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 40000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 40000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 60000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 60000,
+      "timestamp": 3600
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

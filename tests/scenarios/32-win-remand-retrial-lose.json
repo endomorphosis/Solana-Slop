@@ -1,0 +1,84 @@
+{
+  "name": "32-win-remand-retrial-lose",
+  "description": "Win, remanded, retrial loses",
+  "initialFunding": 180000,
+  "minRaise": 120000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 180000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 70000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 70000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform"
+      ],
+      "estimatedCost": 50000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 3500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 120000,
+      "courtLevel": "district",
+      "path": "retrial",
+      "deadline": 6000,
+      "timestamp": 3600
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 30000,
+      "timestamp": 4000
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 6100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 60000,
+      "timestamp": 7000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 60000,
+      "timestamp": 7100
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

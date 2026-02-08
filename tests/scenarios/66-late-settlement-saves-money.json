@@ -1,0 +1,63 @@
+{
+  "name": "66-late-settlement-saves-money",
+  "description": "Late settlement prevents more appeals",
+  "initialFunding": 210000,
+  "minRaise": 140000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 210000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 55000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 55000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 75000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 65000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 65000,
+      "timestamp": 3600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "state_supreme",
+      "timestamp": 3800,
+      "comment": "Settled before state supreme filing"
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": ""
+}

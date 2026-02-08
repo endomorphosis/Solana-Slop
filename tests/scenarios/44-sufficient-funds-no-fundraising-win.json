@@ -1,0 +1,50 @@
+{
+  "name": "44-sufficient-funds-no-fundraising-win",
+  "description": "Sufficient funds, no fundraising needed, win",
+  "initialFunding": 500000,
+  "minRaise": 300000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 500000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 200000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 200000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 100000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 220000,
+      "timestamp": 3500
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": ""
+}

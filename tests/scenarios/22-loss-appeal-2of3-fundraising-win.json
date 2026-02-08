@@ -1,0 +1,66 @@
+{
+  "name": "22-loss-appeal-2of3-fundraising-win",
+  "description": "Loss, 2/3 approve appeal (need fundraising), win on appeal",
+  "initialFunding": 150000,
+  "minRaise": 100000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 150000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 60000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 60000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 150000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 2200
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 100000,
+      "timestamp": 2500
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 5100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 120000,
+      "timestamp": 6000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 120000,
+      "timestamp": 6100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": ""
+}

@@ -1,0 +1,84 @@
+{
+  "name": "82-all-settlements-at-different-levels",
+  "description": "Settlement attempts at each court",
+  "initialFunding": 250000,
+  "minRaise": 160000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 250000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 60000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 60000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 75000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 70000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 70000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 200000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 7000,
+      "timestamp": 3700
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 180000,
+      "timestamp": 4000
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 7100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "state_supreme",
+      "timestamp": 8000
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": "Settlement after multiple losses"
+}

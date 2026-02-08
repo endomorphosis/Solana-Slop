@@ -1,0 +1,32 @@
+{
+  "name": "60-massive-funding-loss",
+  "description": "Massive funding, still lose",
+  "initialFunding": 1000000,
+  "minRaise": 500000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 1000000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 300000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 300000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

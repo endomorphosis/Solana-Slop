@@ -1,0 +1,104 @@
+{
+  "name": "110-all-losses-every-level",
+  "description": "Lose consistently everywhere",
+  "initialFunding": 400000,
+  "minRaise": 260000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 400000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 40000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 40000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 75000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 50000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 50000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 90000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 3700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 60000,
+      "timestamp": 5500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 60000,
+      "timestamp": 5600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 120000,
+      "courtLevel": "us_supreme",
+      "path": "appeal",
+      "deadline": 9000,
+      "timestamp": 5700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "us_supreme",
+      "judgmentAmount": 75000,
+      "timestamp": 8500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 75000,
+      "timestamp": 8600
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Total loss at all courts"
+}

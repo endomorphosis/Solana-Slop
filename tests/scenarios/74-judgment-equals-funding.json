@@ -1,0 +1,32 @@
+{
+  "name": "74-judgment-equals-funding",
+  "description": "Judgment exactly equals available funds",
+  "initialFunding": 180000,
+  "minRaise": 120000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 180000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 162000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 162000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Edge: judgment equals available after DAO fee"
+}

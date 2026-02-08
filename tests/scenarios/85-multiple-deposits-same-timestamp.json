@@ -1,0 +1,42 @@
+{
+  "name": "85-multiple-deposits-same-timestamp",
+  "description": "Multiple deposits at same time",
+  "initialFunding": 180000,
+  "minRaise": 120000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 180000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 120000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 40000,
+      "timestamp": 2100
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 40000,
+      "timestamp": 2100
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 40000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Fuzz: simultaneous deposits"
+}

@@ -1,0 +1,54 @@
+{
+  "name": "89-overfunded-appeal",
+  "description": "Appeal raises more than needed",
+  "initialFunding": 110000,
+  "minRaise": 75000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 110000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 35000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 35000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 100000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 2200
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 150000,
+      "timestamp": 2500
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 5100,
+      "expectedStatus": "locked"
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Overfunding scenario"
+}

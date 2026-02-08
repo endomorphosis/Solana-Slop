@@ -1,0 +1,63 @@
+{
+  "name": "92-win-all-zero-awards",
+  "description": "Win at all levels but no awards",
+  "initialFunding": 200000,
+  "minRaise": 130000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 200000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 0,
+      "timestamp": 2000
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 60000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 3500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 3600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 0,
+      "timestamp": 5500
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Declaratory wins with no monetary awards"
+}

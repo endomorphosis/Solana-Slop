@@ -1,0 +1,32 @@
+{
+  "name": "114-slow-case-few-events",
+  "description": "Slow case with sparse events",
+  "initialFunding": 160000,
+  "minRaise": 105000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 160000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 65000,
+      "timestamp": 100000000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 65000,
+      "timestamp": 100100000
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Very slow case"
+}

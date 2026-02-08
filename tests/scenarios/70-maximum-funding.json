@@ -1,0 +1,32 @@
+{
+  "name": "70-maximum-funding",
+  "description": "Maximum possible funding amount",
+  "initialFunding": 10000000,
+  "minRaise": 5000000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 10000000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 5000000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 5000000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Stress test: very large amounts"
+}

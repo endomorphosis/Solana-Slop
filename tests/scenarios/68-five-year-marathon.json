@@ -1,0 +1,72 @@
+{
+  "name": "68-five-year-marathon",
+  "description": "5-year case with multiple appeals",
+  "initialFunding": 300000,
+  "minRaise": 190000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 300000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 120000,
+      "timestamp": 31536000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 120000,
+      "timestamp": 31636000
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 80000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 63072000,
+      "timestamp": 31736000
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 135000,
+      "timestamp": 94608000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 94708000
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform"
+      ],
+      "estimatedCost": 95000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 126144000,
+      "timestamp": 94808000
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "state_supreme",
+      "timestamp": 157680000
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": ""
+}

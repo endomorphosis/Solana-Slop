@@ -1,0 +1,72 @@
+{
+  "name": "38-win-state-supreme-settlement",
+  "description": "Win through appellate, settle at state supreme",
+  "initialFunding": 250000,
+  "minRaise": 160000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 250000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 120000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 120000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 65000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 130000,
+      "timestamp": 3500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "client"
+      ],
+      "estimatedCost": 80000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 3700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "state_supreme",
+      "timestamp": 5000
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": ""
+}

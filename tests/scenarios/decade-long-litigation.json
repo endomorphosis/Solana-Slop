@@ -1,0 +1,135 @@
+{
+  "name": "Decade-Long Litigation Marathon",
+  "description": "10+ year case with multiple appeals showing conditional fundraising",
+  "initialFunding": 250000,
+  "minRaise": 150000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 250000,
+      "timestamp": 1000,
+      "year": 2014
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 100000,
+      "timestamp": 31536000,
+      "year": 2015,
+      "comment": "Year 1: District court win"
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 100000,
+      "timestamp": 31636000
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": ["attorney"],
+      "estimatedCost": 80000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 63072000,
+      "timestamp": 31736000,
+      "comment": "Year 1: Defend appeal, sufficient funds (no fundraising needed)"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 94608000,
+      "year": 2017,
+      "comment": "Year 3: Appellate reverses and remands"
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": ["attorney", "platform"],
+      "estimatedCost": 120000,
+      "courtLevel": "district",
+      "path": "retrial",
+      "deadline": 126144000,
+      "timestamp": 94708000,
+      "comment": "Year 3: Retrial, sufficient funds available"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 200000,
+      "timestamp": 157680000,
+      "year": 2019,
+      "comment": "Year 5: Lose on retrial"
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 200000,
+      "timestamp": 157780000
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": ["attorney", "client"],
+      "estimatedCost": 180000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 189216000,
+      "timestamp": 157880000,
+      "comment": "Year 5: Appeal loss, need fundraising (depleted funds)"
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 150000,
+      "timestamp": 160000000,
+      "comment": "Community contributes 150k"
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 189316000,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 250000,
+      "timestamp": 220752000,
+      "year": 2021,
+      "comment": "Year 7: Appellate reverses in our favor"
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 250000,
+      "timestamp": 220852000
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": ["platform"],
+      "estimatedCost": 100000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 252288000,
+      "timestamp": 220952000,
+      "comment": "Year 7: Opponent appeals to state supreme, sufficient funds"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 0,
+      "timestamp": 252188000,
+      "year": 2023,
+      "comment": "Year 9: Parties settle at state supreme level (no additional deposit needed)"
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "totalDuration": "9 years",
+  "totalRounds": 4,
+  "totalAppeals": 4,
+  "notes": "Complex multi-year litigation demonstrating conditional fundraising: some appeals need fundraising, others have sufficient funds"
+}

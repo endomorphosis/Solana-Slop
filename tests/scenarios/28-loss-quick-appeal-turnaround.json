@@ -1,0 +1,56 @@
+{
+  "name": "28-loss-quick-appeal-turnaround",
+  "description": "Loss, fast appeal, quick reversal",
+  "initialFunding": 160000,
+  "minRaise": 110000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 160000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 35000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 35000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 50000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 3500,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 80000,
+      "timestamp": 3400
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 80000,
+      "timestamp": 3450
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": ""
+}

@@ -1,0 +1,54 @@
+{
+  "name": "113-fast-case-many-events",
+  "description": "Quick case with many events",
+  "initialFunding": 175000,
+  "minRaise": 115000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 175000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1050,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 70000,
+      "timestamp": 1100
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 35000,
+      "timestamp": 1120
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 35000,
+      "timestamp": 1140
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 55000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 1500,
+      "timestamp": 1160
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "appellate",
+      "timestamp": 1400
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": "Fast-paced case"
+}

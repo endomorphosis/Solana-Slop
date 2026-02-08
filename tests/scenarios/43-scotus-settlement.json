@@ -1,0 +1,95 @@
+{
+  "name": "43-scotus-settlement",
+  "description": "Case reaches US Supreme, settles",
+  "initialFunding": 320000,
+  "minRaise": 210000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 320000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 150000,
+      "timestamp": 3000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 150000,
+      "timestamp": 3100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 75000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 7000,
+      "timestamp": 3200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 165000,
+      "timestamp": 6500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 6600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform"
+      ],
+      "estimatedCost": 95000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 12000,
+      "timestamp": 6700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 180000,
+      "timestamp": 11500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 11600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "client"
+      ],
+      "estimatedCost": 140000,
+      "courtLevel": "us_supreme",
+      "path": "appeal",
+      "deadline": 20000,
+      "timestamp": 11700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "us_supreme",
+      "timestamp": 18000
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": ""
+}

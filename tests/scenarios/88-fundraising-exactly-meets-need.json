@@ -1,0 +1,54 @@
+{
+  "name": "88-fundraising-exactly-meets-need",
+  "description": "Appeal contribution exactly matches requirement",
+  "initialFunding": 120000,
+  "minRaise": 80000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 120000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 40000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 40000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 150000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 2200
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 82000,
+      "timestamp": 2500
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 5100,
+      "expectedStatus": "locked"
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Exact match fundraising"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "95-instant-settlement",
+  "description": "Settlement immediately after funding",
+  "initialFunding": 130000,
+  "minRaise": 90000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 130000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "district",
+      "timestamp": 1150
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": "Ultra-fast settlement"
+}

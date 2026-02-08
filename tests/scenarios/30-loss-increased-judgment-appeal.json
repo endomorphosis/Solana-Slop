@@ -1,0 +1,57 @@
+{
+  "name": "30-loss-increased-judgment-appeal",
+  "description": "Loss, appeal increases judgment (worse outcome)",
+  "initialFunding": 250000,
+  "minRaise": 160000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 250000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 40000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 40000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 90000,
+      "timestamp": 3500,
+      "comment": "Appeal backfired"
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 90000,
+      "timestamp": 3600
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

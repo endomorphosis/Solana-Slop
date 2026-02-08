@@ -1,0 +1,75 @@
+{
+  "name": "Win, Appeal, Remand, Retrial Sequence",
+  "description": "Win at district, opponent appeals, appellate remands for retrial",
+  "initialFunding": 180000,
+  "minRaise": 100000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 180000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 150000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 150000,
+      "timestamp": 2100,
+      "comment": "Deposit winning judgment"
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": ["attorney"],
+      "estimatedCost": 60000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200,
+      "comment": "1/3 approval for win appeal (defending), sufficient funds"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 3500,
+      "comment": "Appellate court orders remand"
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": ["attorney", "client"],
+      "estimatedCost": 100000,
+      "courtLevel": "district",
+      "path": "retrial",
+      "deadline": 5500,
+      "timestamp": 3600,
+      "comment": "2/3 approval for retrial, sufficient funds available"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 175000,
+      "timestamp": 5000,
+      "comment": "Win on retrial"
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 175000,
+      "timestamp": 5100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "totalDuration": "~5 years",
+  "notes": "Demonstrates remand and retrial path with eventual win"
+}

@@ -1,0 +1,66 @@
+{
+  "name": "26-loss-small-judgment-appeal-lose",
+  "description": "Loss with small judgment, appeal loses",
+  "initialFunding": 120000,
+  "minRaise": 80000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 120000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 20000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 20000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 100000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 2200
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 20000,
+      "timestamp": 2500
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 5100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 30000,
+      "timestamp": 6000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 30000,
+      "timestamp": 6100
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

@@ -1,0 +1,99 @@
+{
+  "name": "84-alternating-paths",
+  "description": "Switch between appeal and retrial paths",
+  "initialFunding": 270000,
+  "minRaise": 180000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 270000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 100000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 100000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 65000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 3500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "district",
+      "path": "retrial",
+      "deadline": 6000,
+      "timestamp": 3600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 95000,
+      "timestamp": 5500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "client"
+      ],
+      "estimatedCost": 75000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 8000,
+      "timestamp": 5600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 7500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 80000,
+      "courtLevel": "district",
+      "path": "retrial",
+      "deadline": 10000,
+      "timestamp": 7600
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Alternating appeal and retrial paths"
+}

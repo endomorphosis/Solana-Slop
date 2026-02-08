@@ -1,0 +1,67 @@
+{
+  "name": "112-mixed-signers-approvals",
+  "description": "Different signer combinations",
+  "initialFunding": 220000,
+  "minRaise": 145000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 220000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 50000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 50000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 80000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 90000,
+      "timestamp": 3500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 90000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform"
+      ],
+      "estimatedCost": 85000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 3700
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Various signer combinations"
+}

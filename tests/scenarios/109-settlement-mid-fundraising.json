@@ -1,0 +1,55 @@
+{
+  "name": "109-settlement-mid-fundraising",
+  "description": "Settle during appeal funding",
+  "initialFunding": 125000,
+  "minRaise": 85000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 125000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 35000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 35000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 140000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 2200
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 80000,
+      "timestamp": 2500
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "appellate",
+      "timestamp": 3000
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": "Settle during fundraising"
+}

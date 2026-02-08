@@ -4,10 +4,20 @@ import type {
   CampaignStatus,
   Clock,
   PublicKeyLike,
-  RefundReason
+  RefundReason,
+  InvoicePayment,
+  CampaignOutcome,
+  AppealRound,
+  CourtLevel,
+  LitigationPath
 } from "./types.js";
+import { SYSTEM_RECIPIENT_COURT } from "./types.js";
 
 const APPROVAL_THRESHOLD = 2;
+const WIN_APPEAL_THRESHOLD = 1; // Only 1 signer needed for win appeal
+const LOSS_APPEAL_THRESHOLD = 2; // 2 signers needed for loss appeal
+/** Platform fee percentage (10%) deducted from successful campaigns and allocated to DAO treasury */
+const DAO_FEE_PERCENT = 0.10;
 
 export class Campaign {
   private readonly config: CampaignConfig;
@@ -18,6 +28,19 @@ export class Campaign {
   private readonly approvals = new Set<PublicKeyLike>();
   private refundReason: RefundReason | null = null;
   private refundOpenedAt: number | null = null;
+  private daoFeeAmount = 0;
+  private courtFeesDeposited = 0;
+  private readonly invoicePayments: InvoicePayment[] = [];
+  private readonly pendingInvoiceApprovals = new Map<string, Set<PublicKeyLike>>();
+  private readonly pendingInvoiceDetails = new Map<string, { amount: number; recipient: PublicKeyLike }>();
+  private outcome: CampaignOutcome | null = null;
+  private readonly appealRounds: AppealRound[] = [];
+  private currentRound = 1;
+  private readonly appealApprovals = new Set<PublicKeyLike>();
+  /** Stores parameters from first appeal approval to enforce consistency across subsequent approvals */
+  private firstAppealApprovalParams: { estimatedCost: number; deadlineUnix: number; courtLevel: CourtLevel; path: LitigationPath } | null = null;
+  private judgmentAmount = 0;
+  private readonly appealContributionsByRound = new Map<number, Map<PublicKeyLike, number>>();
 
   constructor(config: CampaignConfig, clock: Clock) {
     if (config.signers.length !== 3) {
@@ -39,7 +62,14 @@ export class Campaign {
 
   getTotalRaised(): number {
     let total = 0;
+    // Sum initial round contributions
     for (const amount of this.contributions.values()) total += amount;
+    // Sum all appeal round contributions
+    for (const roundContributions of this.appealContributionsByRound.values()) {
+      for (const amount of roundContributions.values()) {
+        total += amount;
+      }
+    }
     return total;
   }
 
@@ -80,6 +110,8 @@ export class Campaign {
         this.status = "failed_refunding";
         return;
       }
+      // Successful raise: deduct 10% DAO fee
+      this.daoFeeAmount = Math.floor(this.getTotalRaised() * DAO_FEE_PERCENT);
       this.status = "locked";
     }
   }
@@ -122,5 +154,331 @@ export class Campaign {
 
   getRefundOpenedAt(): number | null {
     return this.refundOpenedAt;
+  }
+
+  getDaoFeeAmount(): number {
+    return this.daoFeeAmount;
+  }
+
+  getCourtFeesDeposited(): number {
+    return this.courtFeesDeposited;
+  }
+
+  getInvoicePayments(): InvoicePayment[] {
+    return [...this.invoicePayments];
+  }
+
+  getAvailableFunds(): number {
+    const totalRaised = this.getTotalRaised();
+    const totalRefunded = Array.from(this.refunded).reduce(
+      (sum, funder) => sum + (this.contributions.get(funder) ?? 0), 
+      0
+    );
+    const totalInvoicePayments = this.invoicePayments.reduce(
+      (sum, payment) => sum + payment.amount, 
+      0
+    );
+    return totalRaised - this.daoFeeAmount - totalRefunded + this.courtFeesDeposited - totalInvoicePayments;
+  }
+
+  depositCourtFees(depositor: PublicKeyLike, amount: number): void {
+    if (this.status !== "locked") {
+      throw new CampaignError("Can only deposit court fees to locked campaigns");
+    }
+    // Only attorney (first signer) can deposit court fees
+    if (depositor !== this.config.signers[0]) {
+      throw new CampaignError("Only attorney can deposit court fees");
+    }
+    if (amount <= 0) {
+      throw new CampaignError("Court fee amount must be > 0");
+    }
+    this.courtFeesDeposited += amount;
+  }
+
+  approveInvoicePayment(approver: PublicKeyLike, invoiceId: string, amount: number, recipient: PublicKeyLike): void {
+    if (this.status !== "locked") {
+      throw new CampaignError("Can only approve invoice payments for locked campaigns");
+    }
+    if (!this.config.signers.includes(approver)) {
+      throw new CampaignError("Approver is not a multisig signer");
+    }
+    if (amount <= 0) {
+      throw new CampaignError("Invoice amount must be > 0");
+    }
+
+    // Check if this invoice already has approvals and validate consistency
+    const existingDetails = this.pendingInvoiceDetails.get(invoiceId);
+    if (existingDetails) {
+      // Ensure amount and recipient are consistent with first approval
+      if (existingDetails.amount !== amount || existingDetails.recipient !== recipient) {
+        throw new CampaignError("Invoice amount and recipient must match existing approvals");
+      }
+    } else {
+      // First approval - check available funds and store details
+      if (this.getAvailableFunds() < amount) {
+        throw new CampaignError("Insufficient funds for invoice payment");
+      }
+      this.pendingInvoiceDetails.set(invoiceId, { amount, recipient });
+    }
+
+    if (!this.pendingInvoiceApprovals.has(invoiceId)) {
+      this.pendingInvoiceApprovals.set(invoiceId, new Set());
+    }
+    const approvals = this.pendingInvoiceApprovals.get(invoiceId)!;
+    
+    // Prevent double approval by same signer
+    if (approvals.has(approver)) {
+      throw new CampaignError("Approver has already approved this invoice");
+    }
+    
+    approvals.add(approver);
+
+    if (approvals.size >= APPROVAL_THRESHOLD) {
+      // Double-check funds are still available before payment
+      if (this.getAvailableFunds() < amount) {
+        throw new CampaignError("Insufficient funds for invoice payment");
+      }
+      
+      this.invoicePayments.push({
+        invoiceId,
+        amount,
+        recipient,
+        approvers: Array.from(approvals)
+      });
+      this.pendingInvoiceApprovals.delete(invoiceId);
+      this.pendingInvoiceDetails.delete(invoiceId);
+    }
+  }
+
+  getInvoiceApprovals(invoiceId: string): PublicKeyLike[] {
+    return Array.from(this.pendingInvoiceApprovals.get(invoiceId) ?? []);
+  }
+
+  getOutcome(): CampaignOutcome | null {
+    return this.outcome;
+  }
+
+  getCurrentRound(): number {
+    return this.currentRound;
+  }
+
+  getAppealRounds(): AppealRound[] {
+    return [...this.appealRounds];
+  }
+
+  getAppealApprovals(): PublicKeyLike[] {
+    return Array.from(this.appealApprovals);
+  }
+
+  getJudgmentAmount(): number {
+    return this.judgmentAmount;
+  }
+
+  /**
+   * Record the outcome of the case (settlement, win, or loss)
+   * Always sets judgmentAmount deterministically (defaults to 0 if not provided)
+   */
+  recordOutcome(outcome: CampaignOutcome, judgmentAmount?: number): void {
+    if (this.status !== "locked") {
+      throw new CampaignError("Can only record outcome for locked campaigns");
+    }
+    
+    this.outcome = outcome;
+    
+    // Always set judgment amount deterministically (0 if not provided or 0 explicitly)
+    // This ensures remands/technical losses with 0 judgment properly clear prior values
+    this.judgmentAmount = judgmentAmount ?? 0;
+    
+    if (outcome === "settlement") {
+      this.status = "settled";
+    } else if (outcome === "win") {
+      this.status = "won";
+    } else if (outcome === "loss") {
+      this.status = "lost";
+    }
+  }
+
+  /**
+   * Deposit court-awarded funds after a win
+   */
+  depositCourtAward(depositor: PublicKeyLike, amount: number): void {
+    if (this.status !== "won") {
+      throw new CampaignError("Can only deposit court awards after a win");
+    }
+    // Only attorney (first signer) can deposit court awards
+    if (depositor !== this.config.signers[0]) {
+      throw new CampaignError("Only attorney can deposit court awards");
+    }
+    if (amount <= 0) {
+      throw new CampaignError("Court award amount must be > 0");
+    }
+    this.courtFeesDeposited += amount;
+  }
+
+  /**
+   * Pay judgment amount after a loss
+   */
+  payJudgment(amount: number): void {
+    if (this.status !== "lost") {
+      throw new CampaignError("Can only pay judgment after a loss");
+    }
+    if (amount <= 0) {
+      throw new CampaignError("Judgment payment amount must be > 0");
+    }
+    if (this.getAvailableFunds() < amount) {
+      throw new CampaignError("Insufficient funds to pay judgment");
+    }
+    
+    // Record as a special invoice payment
+    this.invoicePayments.push({
+      invoiceId: `JUDGMENT-${this.clock.now()}`,
+      amount,
+      recipient: SYSTEM_RECIPIENT_COURT,
+      approvers: [] // System payment
+    });
+  }
+
+  /**
+   * Approve an appeal with conditional fundraising
+   * Win appeal: requires 1/3 approval
+   * Loss appeal: requires 2/3 approval
+   * Only initiates fundraising if insufficient funds available
+   * Enforces parameter consistency across approvals (similar to invoice payments)
+   */
+  approveAppeal(
+    approver: PublicKeyLike, 
+    estimatedCost: number, 
+    deadlineUnix: number,
+    courtLevel: CourtLevel = "appellate",
+    path: LitigationPath = "appeal"
+  ): void {
+    if (this.status !== "won" && this.status !== "lost") {
+      throw new CampaignError("Can only approve appeal after win or loss");
+    }
+    if (!this.config.signers.includes(approver)) {
+      throw new CampaignError("Approver is not a multisig signer");
+    }
+    if (estimatedCost <= 0) {
+      throw new CampaignError("Estimated cost must be > 0");
+    }
+    if (deadlineUnix <= this.clock.now()) {
+      throw new CampaignError("Appeal deadline must be in the future");
+    }
+    
+    // Check if this is the first approval for this appeal
+    if (this.appealApprovals.size === 0) {
+      // Store parameters from first approval for consistency validation
+      this.firstAppealApprovalParams = { estimatedCost, deadlineUnix, courtLevel, path };
+    } else {
+      // Enforce parameter consistency on subsequent approvals
+      if (!this.firstAppealApprovalParams) {
+        throw new CampaignError("Internal error: no first appeal approval parameters");
+      }
+      if (this.firstAppealApprovalParams.estimatedCost !== estimatedCost) {
+        throw new CampaignError("Appeal estimated cost does not match first approval");
+      }
+      if (this.firstAppealApprovalParams.deadlineUnix !== deadlineUnix) {
+        throw new CampaignError("Appeal deadline does not match first approval");
+      }
+      if (this.firstAppealApprovalParams.courtLevel !== courtLevel) {
+        throw new CampaignError("Appeal court level does not match first approval");
+      }
+      if (this.firstAppealApprovalParams.path !== path) {
+        throw new CampaignError("Appeal path does not match first approval");
+      }
+    }
+    
+    // Check for double approval
+    if (this.appealApprovals.has(approver)) {
+      throw new CampaignError("Approver has already approved this appeal");
+    }
+
+    this.appealApprovals.add(approver);
+
+    const requiredApprovals = this.status === "won" ? WIN_APPEAL_THRESHOLD : LOSS_APPEAL_THRESHOLD;
+    
+    if (this.appealApprovals.size >= requiredApprovals) {
+      const availableFunds = this.getAvailableFunds();
+      const needsFundraising = availableFunds < estimatedCost;
+      const minRaiseLamports = needsFundraising ? estimatedCost - availableFunds : 0;
+      
+      // Initialize appeal round
+      this.appealRounds.push({
+        roundNumber: this.currentRound + 1,
+        courtLevel,
+        path,
+        minRaiseLamports,
+        deadlineUnix,
+        totalRaised: 0,
+        previousOutcome: this.outcome!,
+        fundraisingNeeded: needsFundraising
+      });
+      this.currentRound++;
+      
+      if (needsFundraising) {
+        this.status = "appeal_active";
+      } else {
+        // Sufficient funds available, lock immediately
+        this.status = "locked";
+      }
+      
+      this.appealApprovals.clear();
+      this.firstAppealApprovalParams = null;
+    }
+  }
+
+  /**
+   * Contribute to current appeal round
+   * Tracks contributions separately per appeal round to enable per-round refunds
+   */
+  contributeToAppeal(funder: PublicKeyLike, lamports: number): void {
+    if (this.status !== "appeal_active") {
+      throw new CampaignError("Campaign is not accepting appeal contributions");
+    }
+    
+    const currentAppealRound = this.appealRounds[this.appealRounds.length - 1];
+    if (!currentAppealRound) {
+      throw new CampaignError("No active appeal round");
+    }
+    
+    if (this.clock.now() >= currentAppealRound.deadlineUnix) {
+      throw new CampaignError("Appeal deadline has passed");
+    }
+    if (lamports <= 0) {
+      throw new CampaignError("Contribution must be > 0");
+    }
+
+    // Track appeal contributions separately from initial-round contributions
+    let roundContributions = this.appealContributionsByRound.get(currentAppealRound.roundNumber);
+    if (!roundContributions) {
+      roundContributions = new Map<PublicKeyLike, number>();
+      this.appealContributionsByRound.set(currentAppealRound.roundNumber, roundContributions);
+    }
+
+    const prev = roundContributions.get(funder) ?? 0;
+    roundContributions.set(funder, prev + lamports);
+    currentAppealRound.totalRaised += lamports;
+  }
+
+  /**
+   * Evaluate appeal round
+   */
+  evaluateAppeal(): void {
+    if (this.status !== "appeal_active") return;
+
+    const currentAppealRound = this.appealRounds[this.appealRounds.length - 1];
+    if (!currentAppealRound) return;
+
+    if (this.clock.now() >= currentAppealRound.deadlineUnix) {
+      if (currentAppealRound.totalRaised < currentAppealRound.minRaiseLamports) {
+        // Appeal funding failed
+        this.openRefund("auto_failed");
+        this.status = "failed_refunding";
+        return;
+      }
+      // Appeal funding succeeded
+      this.daoFeeAmount += Math.floor(currentAppealRound.totalRaised * DAO_FEE_PERCENT);
+      this.status = "locked";
+    }
   }
 }

@@ -1,0 +1,113 @@
+{
+  "name": "Loss with Multiple Appeals to US Supreme Court",
+  "description": "District loss, appeal to appellate, lose again, appeal to state supreme, lose again, appeal to US Supreme Court",
+  "initialFunding": 200000,
+  "minRaise": 100000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 200000,
+      "timestamp": 1000,
+      "comment": "Initial district court funding"
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 50000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 50000,
+      "timestamp": 2100,
+      "comment": "Pay district court judgment"
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": ["attorney", "platform"],
+      "estimatedCost": 80000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 3500,
+      "timestamp": 2200,
+      "comment": "2/3 approval for loss appeal, sufficient funds available (130k remaining)"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 75000,
+      "timestamp": 3000,
+      "comment": "Lose at appellate level"
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 75000,
+      "timestamp": 3100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": ["attorney", "client"],
+      "estimatedCost": 100000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 3200,
+      "comment": "Need fundraising: only 55k remaining but need 100k"
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 50000,
+      "timestamp": 3300,
+      "comment": "Additional 50k raised for state supreme appeal"
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 5100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 100000,
+      "timestamp": 6000,
+      "comment": "Lose at state supreme"
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 100000,
+      "timestamp": 6100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": ["attorney", "platform"],
+      "estimatedCost": 150000,
+      "courtLevel": "us_supreme",
+      "path": "appeal",
+      "deadline": 8000,
+      "timestamp": 6200,
+      "comment": "Final appeal to US Supreme Court, need significant fundraising"
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 150000,
+      "timestamp": 6500,
+      "comment": "Community raises 150k for final appeal"
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 8100,
+      "expectedStatus": "locked"
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "totalDuration": "~10 years simulated",
+  "notes": "Complex multi-level appeals with multiple losses and judgments"
+}

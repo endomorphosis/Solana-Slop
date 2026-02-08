@@ -1,0 +1,55 @@
+{
+  "name": "105-judgment-larger-than-award",
+  "description": "Lose more than won",
+  "initialFunding": 250000,
+  "minRaise": 165000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 250000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 50000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 50000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 60000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 150000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 150000,
+      "timestamp": 3600
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Net loss despite initial win"
+}

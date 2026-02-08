@@ -1,0 +1,32 @@
+{
+  "name": "54-delayed-judgment-payment",
+  "description": "Long delay between outcome and payment",
+  "initialFunding": 180000,
+  "minRaise": 120000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 180000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 50000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 50000,
+      "timestamp": 15000
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

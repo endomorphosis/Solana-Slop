@@ -1,0 +1,70 @@
+{
+  "name": "34-loss-remand-settlement",
+  "description": "Loss, remanded, parties settle",
+  "initialFunding": 160000,
+  "minRaise": 110000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 160000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 40000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 40000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 55000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 3500,
+      "comment": "Remanded"
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 50000,
+      "courtLevel": "district",
+      "path": "retrial",
+      "deadline": 6000,
+      "timestamp": 3600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "district",
+      "timestamp": 5000
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": ""
+}
