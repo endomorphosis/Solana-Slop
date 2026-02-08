@@ -325,6 +325,7 @@
             <button id="tab-proposals" class="nav-tab" role="tab" aria-selected="false" aria-controls="proposals" onclick="switchTab('proposals', event)">📋 Proposals</button>
             <button id="tab-campaigns" class="nav-tab" role="tab" aria-selected="false" aria-controls="campaigns" onclick="switchTab('campaigns', event)">💰 Campaigns</button>
             <button id="tab-case-management" class="nav-tab" role="tab" aria-selected="false" aria-controls="case-management" onclick="switchTab('case-management', event)">⚖️ Case Management</button>
+            <button id="tab-attorney-verification" class="nav-tab" role="tab" aria-selected="false" aria-controls="attorney-verification" onclick="switchTab('attorney-verification', event)">⚖️ Attorney Verification</button>
             <button id="tab-accounts" class="nav-tab" role="tab" aria-selected="false" aria-controls="accounts" onclick="switchTab('accounts', event)">👥 Accounts</button>
             <button id="tab-user-profiles" class="nav-tab" role="tab" aria-selected="false" aria-controls="user-profiles" onclick="switchTab('user-profiles', event)">👤 User Profiles</button>
             <button id="tab-transactions" class="nav-tab" role="tab" aria-selected="false" aria-controls="transactions" onclick="switchTab('transactions', event)">💸 Transactions</button>
@@ -657,6 +658,137 @@
         </div>
 
         <!-- Transactions Tab -->
+        <!-- Attorney Verification Tab -->
+        <div id="attorney-verification" class="tab-content">
+            <div class="card">
+                <h2>Attorney Profile Verification</h2>
+                <p style="color: #666; margin-bottom: 20px;">Review and verify attorney profiles before they go live on the platform.</p>
+                
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterAttorneys('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterAttorneys('pending', event)">Pending</button>
+                    <button class="filter-btn" onclick="filterAttorneys('verified', event)">Verified</button>
+                    <button class="filter-btn" onclick="filterAttorneys('rejected', event)">Rejected</button>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>State Bar</th>
+                            <th>License #</th>
+                            <th>Practice Areas</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="attorneys-table">
+                        <!-- Demo data -->
+                        <tr class="attorney-row" data-status="pending">
+                            <td><strong>John Attorney</strong></td>
+                            <td>john.attorney@example.com</td>
+                            <td>California</td>
+                            <td>CA123456</td>
+                            <td>Civil Litigation, Personal Injury</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td>
+                                <button class="action-btn action-view" onclick="viewAttorneyProfile('attorney1')">👁️ View</button>
+                                <button class="action-btn action-approve" onclick="approveAttorney('attorney1')">✓ Approve</button>
+                                <button class="action-btn action-reject" onclick="rejectAttorney('attorney1')">✗ Reject</button>
+                            </td>
+                        </tr>
+                        <tr class="attorney-row" data-status="pending">
+                            <td><strong>Jane Smith</strong></td>
+                            <td>jane.smith@lawfirm.com</td>
+                            <td>New York</td>
+                            <td>NY987654</td>
+                            <td>Criminal Defense</td>
+                            <td><span class="status-badge status-pending">Pending</span></td>
+                            <td>
+                                <button class="action-btn action-view" onclick="viewAttorneyProfile('attorney2')">👁️ View</button>
+                                <button class="action-btn action-approve" onclick="approveAttorney('attorney2')">✓ Approve</button>
+                                <button class="action-btn action-reject" onclick="rejectAttorney('attorney2')">✗ Reject</button>
+                            </td>
+                        </tr>
+                        <tr class="attorney-row" data-status="verified">
+                            <td><strong>Bob Johnson</strong></td>
+                            <td>bob.johnson@example.com</td>
+                            <td>Texas</td>
+                            <td>TX555123</td>
+                            <td>Corporate Law, Real Estate</td>
+                            <td><span class="status-badge status-approved">Verified</span></td>
+                            <td>
+                                <button class="action-btn action-view" onclick="viewAttorneyProfile('attorney3')">👁️ View</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Attorney Profile Detail Modal -->
+            <div id="attorney-detail-modal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; padding: 20px; overflow-y: auto;">
+                <div style="max-width: 800px; margin: 40px auto; background: white; border-radius: 15px; padding: 40px; box-shadow: 0 10px 50px rgba(0,0,0,0.3);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                        <h2 style="margin: 0;">Attorney Profile Details</h2>
+                        <button onclick="closeAttorneyModal()" style="background: none; border: none; font-size: 2em; cursor: pointer; color: #999;">&times;</button>
+                    </div>
+
+                    <div id="attorney-detail-content">
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">Personal Information</h3>
+                            <p><strong>Full Name:</strong> <span id="detail-name">John Attorney</span></p>
+                            <p><strong>Email:</strong> <span id="detail-email">john.attorney@example.com</span></p>
+                            <p><strong>Wallet Address:</strong> <span id="detail-wallet" style="font-family: monospace; font-size: 0.9em;">attorney1_wallet_address</span></p>
+                        </div>
+
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">Bar License Information</h3>
+                            <p><strong>State Bar:</strong> <span id="detail-state">California</span></p>
+                            <p><strong>License Number:</strong> <span id="detail-license">CA123456</span></p>
+                            <p><strong>Year Admitted:</strong> <span id="detail-year">2015</span></p>
+                            <p><strong>License Status:</strong> <span id="detail-status">Active</span></p>
+                            <div style="margin-top: 15px; padding: 15px; background: #f8f9fa; border-radius: 8px;">
+                                <strong>State Bar Verification Links:</strong>
+                                <ul style="margin-top: 10px; margin-left: 20px;">
+                                    <li><a href="https://www.calbar.ca.gov/Attorneys/Memberships/Attorney-Search" target="_blank" class="link">California State Bar - Attorney Search</a></li>
+                                    <li><a href="https://www.avvo.com/" target="_blank" class="link">Avvo - Attorney Verification</a></li>
+                                    <li>Search for license number: <strong id="detail-license-copy">CA123456</strong></li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">Practice Areas</h3>
+                            <p id="detail-practice-areas">Civil Litigation, Personal Injury</p>
+                        </div>
+
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">Professional Bio</h3>
+                            <p id="detail-bio" style="line-height: 1.6; color: #666;">Experienced attorney with 10 years in civil litigation and personal injury cases.</p>
+                        </div>
+
+                        <div style="margin-bottom: 30px;">
+                            <h3 style="color: #667eea; margin-bottom: 15px;">Contact Preferences</h3>
+                            <p><strong>Accepts Client Solicitations:</strong> <span id="detail-solicitations">Yes</span></p>
+                        </div>
+
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 2px solid #f0f0f0;">
+                            <label for="verification-notes" style="display: block; margin-bottom: 10px; font-weight: 600;">Verification Notes:</label>
+                            <textarea id="verification-notes" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; min-height: 100px;" placeholder="Add notes about verification process..."></textarea>
+                        </div>
+
+                        <div style="display: flex; gap: 10px; margin-top: 20px;">
+                            <button class="action-btn action-approve" style="flex: 1; padding: 15px;" onclick="confirmApproveAttorney()">✓ Approve Profile</button>
+                            <button class="action-btn action-reject" style="flex: 1; padding: 15px;" onclick="confirmRejectAttorney()">✗ Reject Profile</button>
+                            <button class="action-btn" style="flex: 1; padding: 15px; background: #999;" onclick="closeAttorneyModal()">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Tab -->
         <div id="transactions" class="tab-content">
             <div class="card">
                 <h2>Transaction History</h2>
@@ -817,6 +949,174 @@
             document.getElementById('appellate-cases').textContent = '3';
             document.getElementById('state-supreme-cases').textContent = '1';
             document.getElementById('us-supreme-cases').textContent = '0';
+        }
+
+        // Attorney verification functions
+        let currentAttorneyId = null;
+
+        function filterAttorneys(status, event) {
+            // Update active button
+            document.querySelectorAll('#attorney-verification .filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Filter rows
+            const rows = document.querySelectorAll('.attorney-row');
+            rows.forEach(row => {
+                if (status === 'all' || row.dataset.status === status) {
+                    row.style.display = '';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        function viewAttorneyProfile(attorneyId) {
+            currentAttorneyId = attorneyId;
+            
+            // Mock data - in production, fetch from API
+            const mockData = {
+                attorney1: {
+                    name: 'John Attorney',
+                    email: 'john.attorney@example.com',
+                    wallet: 'attorney1_wallet_address_abc123',
+                    state: 'California',
+                    license: 'CA123456',
+                    year: '2015',
+                    status: 'Active',
+                    practiceAreas: 'Civil Litigation, Personal Injury',
+                    bio: 'Experienced attorney with 10 years in civil litigation and personal injury cases. Successfully handled over 100 cases with a 85% success rate.',
+                    solicitations: 'Yes'
+                },
+                attorney2: {
+                    name: 'Jane Smith',
+                    email: 'jane.smith@lawfirm.com',
+                    wallet: 'attorney2_wallet_address_xyz789',
+                    state: 'New York',
+                    license: 'NY987654',
+                    year: '2018',
+                    status: 'Active',
+                    practiceAreas: 'Criminal Defense',
+                    bio: 'Specialized in criminal defense with focus on white collar crime and federal cases.',
+                    solicitations: 'No'
+                },
+                attorney3: {
+                    name: 'Bob Johnson',
+                    email: 'bob.johnson@example.com',
+                    wallet: 'attorney3_wallet_address_def456',
+                    state: 'Texas',
+                    license: 'TX555123',
+                    year: '2010',
+                    status: 'Active',
+                    practiceAreas: 'Corporate Law, Real Estate',
+                    bio: 'Over 15 years experience in corporate law and commercial real estate transactions.',
+                    solicitations: 'Yes'
+                }
+            };
+
+            const data = mockData[attorneyId] || mockData.attorney1;
+
+            // Populate modal
+            document.getElementById('detail-name').textContent = data.name;
+            document.getElementById('detail-email').textContent = data.email;
+            document.getElementById('detail-wallet').textContent = data.wallet;
+            document.getElementById('detail-state').textContent = data.state;
+            document.getElementById('detail-license').textContent = data.license;
+            document.getElementById('detail-license-copy').textContent = data.license;
+            document.getElementById('detail-year').textContent = data.year;
+            document.getElementById('detail-status').textContent = data.status;
+            document.getElementById('detail-practice-areas').textContent = data.practiceAreas;
+            document.getElementById('detail-bio').textContent = data.bio;
+            document.getElementById('detail-solicitations').textContent = data.solicitations;
+            document.getElementById('verification-notes').value = '';
+
+            // Show modal
+            document.getElementById('attorney-detail-modal').style.display = 'block';
+        }
+
+        function closeAttorneyModal() {
+            document.getElementById('attorney-detail-modal').style.display = 'none';
+            currentAttorneyId = null;
+        }
+
+        function approveAttorney(attorneyId) {
+            currentAttorneyId = attorneyId;
+            viewAttorneyProfile(attorneyId);
+        }
+
+        function rejectAttorney(attorneyId) {
+            currentAttorneyId = attorneyId;
+            viewAttorneyProfile(attorneyId);
+        }
+
+        function confirmApproveAttorney() {
+            const notes = document.getElementById('verification-notes').value;
+            
+            if (confirm('Are you sure you want to approve this attorney profile?')) {
+                console.log('Approving attorney:', currentAttorneyId, 'with notes:', notes);
+                
+                // In production, call API: dashboard.verifyAttorneyProfile(publicKey, adminWallet, true, notes)
+                
+                alert('Attorney profile approved! The attorney has been notified and their profile is now live.');
+                closeAttorneyModal();
+                
+                // Update UI - find the row and update status
+                updateAttorneyStatus(currentAttorneyId, 'verified');
+            }
+        }
+
+        function confirmRejectAttorney() {
+            const notes = document.getElementById('verification-notes').value;
+            
+            if (!notes) {
+                alert('Please provide a reason for rejection in the verification notes.');
+                return;
+            }
+
+            if (confirm('Are you sure you want to reject this attorney profile?')) {
+                console.log('Rejecting attorney:', currentAttorneyId, 'with notes:', notes);
+                
+                // In production, call API: dashboard.verifyAttorneyProfile(publicKey, adminWallet, false, notes)
+                
+                alert('Attorney profile rejected. The attorney has been notified with your feedback.');
+                closeAttorneyModal();
+                
+                // Update UI
+                updateAttorneyStatus(currentAttorneyId, 'rejected');
+            }
+        }
+
+        function updateAttorneyStatus(attorneyId, newStatus) {
+            // Find and update the row
+            const rows = document.querySelectorAll('.attorney-row');
+            rows.forEach(row => {
+                const viewBtn = row.querySelector('.action-view');
+                if (viewBtn && viewBtn.onclick.toString().includes(attorneyId)) {
+                    row.dataset.status = newStatus;
+                    
+                    const statusBadge = row.querySelector('.status-badge');
+                    if (newStatus === 'verified') {
+                        statusBadge.textContent = 'Verified';
+                        statusBadge.className = 'status-badge status-approved';
+                        
+                        // Remove approve/reject buttons
+                        const approveBtn = row.querySelector('.action-approve');
+                        const rejectBtn = row.querySelector('.action-reject');
+                        if (approveBtn) approveBtn.remove();
+                        if (rejectBtn) rejectBtn.remove();
+                    } else if (newStatus === 'rejected') {
+                        statusBadge.textContent = 'Rejected';
+                        statusBadge.className = 'status-badge status-rejected';
+                        
+                        // Remove approve/reject buttons
+                        const approveBtn = row.querySelector('.action-approve');
+                        const rejectBtn = row.querySelector('.action-reject');
+                        if (approveBtn) approveBtn.remove();
+                        if (rejectBtn) rejectBtn.remove();
+                    }
+                }
+            });
         }
 
         // Initialize the dashboard

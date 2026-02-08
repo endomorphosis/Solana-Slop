@@ -11,6 +11,93 @@ export type AccountType = "user" | "client" | "attorney";
 export type ProposalStatus = "pending" | "approved" | "rejected";
 
 /**
+ * Attorney verification status
+ */
+export type AttorneyVerificationStatus = "pending" | "verified" | "rejected";
+
+/**
+ * Practice areas for attorneys
+ */
+export type PracticeArea = 
+  | "civil_litigation"
+  | "criminal_defense"
+  | "family_law"
+  | "intellectual_property"
+  | "corporate_law"
+  | "real_estate"
+  | "employment_law"
+  | "personal_injury"
+  | "immigration"
+  | "bankruptcy"
+  | "tax_law"
+  | "environmental_law"
+  | "other";
+
+/**
+ * Bar license information
+ */
+export interface BarLicenseInfo {
+  /** State bar where licensed */
+  state: string;
+  /** Bar license number */
+  licenseNumber: string;
+  /** Year admitted to the bar */
+  yearAdmitted: number;
+  /** License status (active, inactive, suspended) */
+  status: "active" | "inactive" | "suspended";
+}
+
+/**
+ * Attorney profile with professional details
+ */
+export interface AttorneyProfile {
+  /** Wallet public key */
+  publicKey: PublicKeyLike;
+  /** Attorney's full name */
+  fullName: string;
+  /** Email address */
+  email: string;
+  /** Email verified status */
+  emailVerified: boolean;
+  /** Bar license information */
+  barLicense: BarLicenseInfo;
+  /** Practice areas */
+  practiceAreas: PracticeArea[];
+  /** Whether attorney accepts solicitations from clients */
+  acceptsSolicitations: boolean;
+  /** Verification status by admin */
+  verificationStatus: AttorneyVerificationStatus;
+  /** Registration timestamp */
+  registeredAt: number;
+  /** Verified by (admin wallet) */
+  verifiedBy?: PublicKeyLike;
+  /** Verification timestamp */
+  verifiedAt?: number;
+  /** Verification notes from admin */
+  verificationNotes?: string;
+  /** Profile bio */
+  bio?: string;
+}
+
+/**
+ * Attorney registration data (before profile completion)
+ */
+export interface AttorneyRegistration {
+  /** Unique registration ID */
+  id: string;
+  /** Username for login */
+  username: string;
+  /** Email address */
+  email: string;
+  /** Email verification status */
+  emailVerified: boolean;
+  /** Registration timestamp */
+  registeredAt: number;
+  /** Email verification token */
+  verificationToken?: string;
+}
+
+/**
  * Information about an account in the system
  */
 export interface AccountInfo {
