@@ -109,6 +109,7 @@ const profile = await portal.setupEncryption(
 // Encrypt and store document
 const encryptedDoc = await portal.encryptDocument(
   "username",
+  "password123", // Required to decrypt master key
   Buffer.from("Sensitive content"),
   {
     type: "evidence",
@@ -359,11 +360,12 @@ await portal.setupEncryption(
 // Upload encrypted document
 const doc = await portal.encryptDocument(
   "johndoe",
+  "securepassword123", // Password required to decrypt master key
   Buffer.from("Evidence content"),
   {
     type: "evidence",
     name: "evidence.pdf",
-    cid: "QmIPFSHash..."
+    cid: "QmIPFSHash..." // In production: upload to IPFS and use returned CID
   }
 );
 
@@ -409,8 +411,8 @@ Tests cover:
 
 ## Future Enhancements
 
-1. **EdDSA Signatures**: Replace HMAC with proper EdDSA signatures for UCAN tokens
-2. **Helia Integration**: Migrate from deprecated ipfs-http-client to Helia
+1. **EdDSA Signatures**: Replace HMAC with proper EdDSA signatures for UCAN tokens (CRITICAL for production)
+2. **IPFS/Helia Integration**: Implement decentralized document storage (currently in-memory)
 3. **Multi-factor Authentication**: Add 2FA support
 4. **Biometric Authentication**: Support for fingerprint/face recognition
 5. **Hardware Security Module**: Integration for key storage
@@ -418,13 +420,30 @@ Tests cover:
 7. **Rate Limiting**: Prevent brute-force attacks
 8. **Session Management**: JWT-based session tokens
 
+## Implementation Status
+
+### ✅ Implemented
+- Client registration with bcrypt password hashing
+- Email verification with time-limited tokens
+- KYC information submission and tracking
+- Client-side encryption with PBKDF2 and AES-256-GCM
+- Document encryption/decryption (in-memory storage)
+- UCAN token generation and verification (simplified signatures)
+- Complaint creation and submission
+- Password management with master key re-encryption
+
+### 🚧 Future Implementation Required
+- **IPFS Integration**: Document storage currently uses in-memory Map. Production requires Helia or IPFS client.
+- **EdDSA Signatures**: UCAN tokens use HMAC for demonstration. Production requires proper EdDSA signatures with private keys.
+- **Complaint-Generator Integration**: Currently simulated. Production requires HTTP API or subprocess integration with the Python package.
+
 ## Dependencies
 
 - `bcryptjs` - Password hashing
-- `uuid` - Unique identifier generation
+- `uuid` - Unique identifier generation  
 - `crypto` (Node.js built-in) - Cryptographic operations
-- `ipfs-http-client` - IPFS integration (to be migrated to Helia)
-- `@ucanto/*` - UCAN token support
+
+**Note**: IPFS/Helia and UCAN packages are listed in package.json but not yet integrated in this implementation. They are reserved for future enhancement.
 
 ## License
 

@@ -25,6 +25,7 @@ export class ClientPortal {
   private readonly clientProfiles = new Map<string, ClientProfile>();
   private readonly emailVerifications = new Map<string, EmailVerificationRequest>();
   private readonly encryptedDocuments = new Map<string, EncryptedDocument>();
+  private readonly documentContents = new Map<string, Buffer>(); // Encrypted document content storage
   private readonly clock: Clock;
   
   // Encryption constants
@@ -301,7 +302,10 @@ export class ClientPortal {
     };
 
     // Create signature using HMAC with issuer's public key as secret
-    // In production, this should use proper EdDSA signatures
+    // NOTE: This is a simplified implementation for demonstration purposes
+    // PRODUCTION IMPLEMENTATION REQUIRED: Use proper EdDSA signatures with private key
+    // Current implementation does not provide real cryptographic security
+    // as the public key is publicly available
     const signature = this.signUCANToken(token, profile.encryption.publicKey);
     token.signature = signature;
 
@@ -313,10 +317,11 @@ export class ClientPortal {
 
   /**
    * Encrypt a document and store with metadata
-   * Documents are encrypted with the client's master key
+   * Documents are encrypted with the client's master key (requires password to decrypt master key)
    */
   async encryptDocument(
     username: string,
+    password: string,
     document: Buffer | string,
     metadata: {
       type: EncryptedDocument["type"];
@@ -333,38 +338,42 @@ export class ClientPortal {
       throw new Error("Encryption not configured");
     }
 
-    // Get master key (requires password in production - simplified here)
+    // Verify password
+    const isValid = await bcrypt.compare(password, profile.credentials.passwordHash);
+    if (!isValid) {
+      throw new Error("Invalid password");
+    }
+
+    // Derive password key and decrypt master key
     const salt = Buffer.from(profile.encryption.salt, "base64");
-    // Note: In production, this would require the user's password
-    // For now, we store the encrypted master key and would decrypt it with password
+    const passwordKey = await this.deriveKeyFromPassword(password, salt);
+    const encryptedMasterKey = Buffer.from(profile.encryption.encryptedMasterKey, "base64");
+    const masterKey = this.decryptWithKey(encryptedMasterKey, passwordKey);
 
     // Generate random IV for this document
     const iv = crypto.randomBytes(this.IV_LENGTH);
-
-    // For demonstration, we'll use a key derived from the username
-    // In production, decrypt encryptedMasterKey with password-derived key
-    const keyId = `key_${uuidv4()}`;
+    const keyId = profile.encryption.did; // Use client's DID as key identifier
 
     // Convert document to buffer if string
     const docBuffer = typeof document === "string" 
       ? Buffer.from(document, "utf-8") 
       : document;
 
-    // Encrypt document using AES-256-GCM
-    const cipher = crypto.createCipheriv(this.ALGORITHM, 
-      crypto.randomBytes(this.KEY_LENGTH), // Temporary key - use master key in production
-      iv
-    );
+    // Encrypt document using AES-256-GCM with master key
+    const cipher = crypto.createCipheriv(this.ALGORITHM, masterKey, iv);
     const encrypted = Buffer.concat([
       cipher.update(docBuffer),
       cipher.final()
     ]);
     const authTag = cipher.getAuthTag();
 
-    // Store encrypted document
+    // Combine encrypted data with auth tag for storage
+    const encryptedContent = Buffer.concat([encrypted, authTag]);
+
+    // Store encrypted document metadata and content
     const encryptedDoc: EncryptedDocument = {
       id: uuidv4(),
-      cid: metadata.cid,
+      cid: metadata.cid, // In production: upload encryptedContent to IPFS and use returned CID
       type: metadata.type,
       name: metadata.name,
       owner: profile.encryption.publicKey,
@@ -377,7 +386,10 @@ export class ClientPortal {
       isPermanentlyDecrypted: false
     };
 
+    // Store both metadata and encrypted content
     this.encryptedDocuments.set(encryptedDoc.id, encryptedDoc);
+    // Store encrypted content for later retrieval (in production, this would be on IPFS)
+    this.documentContents.set(encryptedDoc.id, encryptedContent);
 
     return encryptedDoc;
   }
@@ -415,17 +427,31 @@ export class ClientPortal {
       throw new Error("Encryption not configured");
     }
 
-    // Derive password key
+    // Derive password key and decrypt master key
     const salt = Buffer.from(profile.encryption.salt, "base64");
     const passwordKey = await this.deriveKeyFromPassword(password, salt);
-
-    // Decrypt master key
     const encryptedMasterKey = Buffer.from(profile.encryption.encryptedMasterKey, "base64");
     const masterKey = this.decryptWithKey(encryptedMasterKey, passwordKey);
 
-    // Note: In production, fetch encrypted content from IPFS using document.cid
-    // For now, return a placeholder
-    const decryptedContent = Buffer.from(`Decrypted content for ${document.name}`);
+    // Get encrypted content (in production: fetch from IPFS using document.cid)
+    const encryptedContent = this.documentContents.get(documentId);
+    if (!encryptedContent) {
+      throw new Error("Document content not found");
+    }
+
+    // Extract auth tag from encrypted content
+    const authTag = encryptedContent.subarray(encryptedContent.length - this.AUTH_TAG_LENGTH);
+    const encrypted = encryptedContent.subarray(0, encryptedContent.length - this.AUTH_TAG_LENGTH);
+
+    // Decrypt document using master key
+    const iv = Buffer.from(document.encryption.iv, "base64");
+    const decipher = crypto.createDecipheriv(this.ALGORITHM, masterKey, iv);
+    decipher.setAuthTag(authTag);
+
+    const decryptedContent = Buffer.concat([
+      decipher.update(encrypted),
+      decipher.final()
+    ]);
 
     return decryptedContent;
   }
@@ -746,7 +772,10 @@ export class ClientPortal {
   }
 
   /**
-   * Sign UCAN token (simplified - use EdDSA in production)
+   * Sign UCAN token
+   * NOTE: Simplified implementation using HMAC
+   * PRODUCTION REQUIREMENT: Must use EdDSA signatures with private key
+   * for proper cryptographic security
    */
   private signUCANToken(token: Omit<UCANToken, "signature">, publicKey: PublicKeyLike): string {
     const payload = JSON.stringify({
@@ -757,8 +786,8 @@ export class ClientPortal {
       expiresAt: token.expiresAt
     });
 
-    // In production, use EdDSA signature with private key
-    // For now, use HMAC with public key as secret
+    // TEMPORARY: Using HMAC for demonstration
+    // PRODUCTION: Use EdDSA signature with private key (e.g., ed25519)
     const hmac = crypto.createHmac("sha256", publicKey);
     hmac.update(payload);
     return hmac.digest("hex");

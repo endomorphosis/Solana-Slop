@@ -321,11 +321,16 @@ describe("ClientPortal", () => {
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
       const document = Buffer.from("Sensitive legal document content");
-      const encryptedDoc = await portal.encryptDocument("testuser", document, {
-        type: "evidence",
-        name: "evidence.pdf",
-        cid: "QmTest123"
-      });
+      const encryptedDoc = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        document,
+        {
+          type: "evidence",
+          name: "evidence.pdf",
+          cid: "QmTest123"
+        }
+      );
 
       expect(encryptedDoc.id).toBeDefined();
       expect(encryptedDoc.type).toBe("evidence");
@@ -339,12 +344,18 @@ describe("ClientPortal", () => {
       await portal.registerClient("testuser", "password123", "test@example.com");
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
-      const document = Buffer.from("Test content");
-      const encryptedDoc = await portal.encryptDocument("testuser", document, {
-        type: "complaint",
-        name: "test.pdf",
-        cid: "QmTest"
-      });
+      const originalContent = "Test document content";
+      const document = Buffer.from(originalContent);
+      const encryptedDoc = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        document,
+        {
+          type: "complaint",
+          name: "test.pdf",
+          cid: "QmTest"
+        }
+      );
 
       const decrypted = await portal.decryptDocument(
         "testuser",
@@ -353,6 +364,7 @@ describe("ClientPortal", () => {
       );
 
       expect(decrypted).toBeDefined();
+      expect(decrypted.toString("utf-8")).toBe(originalContent);
     });
 
     it("should permanently decrypt a document", async () => {
@@ -360,11 +372,16 @@ describe("ClientPortal", () => {
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
       const document = Buffer.from("Final submission");
-      const encryptedDoc = await portal.encryptDocument("testuser", document, {
-        type: "complaint",
-        name: "final.pdf",
-        cid: "QmFinal"
-      });
+      const encryptedDoc = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        document,
+        {
+          type: "complaint",
+          name: "final.pdf",
+          cid: "QmFinal"
+        }
+      );
 
       const permanentlyDecrypted = await portal.permanentlyDecryptDocument(
         "testuser",
@@ -381,17 +398,27 @@ describe("ClientPortal", () => {
       await portal.registerClient("testuser", "password123", "test@example.com");
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
-      await portal.encryptDocument("testuser", Buffer.from("Doc 1"), {
-        type: "evidence",
-        name: "doc1.pdf",
-        cid: "QmDoc1"
-      });
+      await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("Doc 1"),
+        {
+          type: "evidence",
+          name: "doc1.pdf",
+          cid: "QmDoc1"
+        }
+      );
 
-      await portal.encryptDocument("testuser", Buffer.from("Doc 2"), {
-        type: "complaint",
-        name: "doc2.pdf",
-        cid: "QmDoc2"
-      });
+      await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("Doc 2"),
+        {
+          type: "complaint",
+          name: "doc2.pdf",
+          cid: "QmDoc2"
+        }
+      );
 
       const documents = portal.getClientDocuments("testuser");
       expect(documents.length).toBe(2);
@@ -457,11 +484,16 @@ describe("ClientPortal", () => {
       await portal.registerClient("testuser", "password123", "test@example.com");
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
-      const encryptedDoc = await portal.encryptDocument("testuser", Buffer.from("Evidence"), {
-        type: "evidence",
-        name: "evidence.pdf",
-        cid: "QmEvidence"
-      });
+      const encryptedDoc = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("Evidence"),
+        {
+          type: "evidence",
+          name: "evidence.pdf",
+          cid: "QmEvidence"
+        }
+      );
 
       const attorneyDID = "did:key:attorney_123";
       const token = portal.delegateDocumentAccess(
@@ -483,17 +515,27 @@ describe("ClientPortal", () => {
       await portal.registerClient("testuser", "password123", "test@example.com");
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
-      const doc1 = await portal.encryptDocument("testuser", Buffer.from("Evidence 1"), {
-        type: "evidence",
-        name: "evidence1.pdf",
-        cid: "QmEvidence1"
-      });
+      const doc1 = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("Evidence 1"),
+        {
+          type: "evidence",
+          name: "evidence1.pdf",
+          cid: "QmEvidence1"
+        }
+      );
 
-      const doc2 = await portal.encryptDocument("testuser", Buffer.from("Evidence 2"), {
-        type: "evidence",
-        name: "evidence2.pdf",
-        cid: "QmEvidence2"
-      });
+      const doc2 = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("Evidence 2"),
+        {
+          type: "evidence",
+          name: "evidence2.pdf",
+          cid: "QmEvidence2"
+        }
+      );
 
       const complaint = portal.createComplaint(
         "testuser",
@@ -535,11 +577,16 @@ describe("ClientPortal", () => {
 
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
-      const doc = await portal.encryptDocument("testuser", Buffer.from("Evidence"), {
-        type: "evidence",
-        name: "evidence.pdf",
-        cid: "QmEvidence"
-      });
+      const doc = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("Evidence"),
+        {
+          type: "evidence",
+          name: "evidence.pdf",
+          cid: "QmEvidence"
+        }
+      );
 
       const complaint = portal.createComplaint(
         "testuser",
@@ -560,11 +607,16 @@ describe("ClientPortal", () => {
       await portal.registerClient("testuser", "password123", "test@example.com");
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
-      const doc = await portal.encryptDocument("testuser", Buffer.from("Evidence"), {
-        type: "evidence",
-        name: "evidence.pdf",
-        cid: "QmEvidence"
-      });
+      const doc = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("Evidence"),
+        {
+          type: "evidence",
+          name: "evidence.pdf",
+          cid: "QmEvidence"
+        }
+      );
 
       const complaint = portal.createComplaint(
         "testuser",
@@ -582,11 +634,16 @@ describe("ClientPortal", () => {
       await portal.registerClient("testuser", "password123", "test@example.com");
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
-      const doc = await portal.encryptDocument("testuser", Buffer.from("Evidence"), {
-        type: "evidence",
-        name: "evidence.pdf",
-        cid: "QmEvidence"
-      });
+      const doc = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("Evidence"),
+        {
+          type: "evidence",
+          name: "evidence.pdf",
+          cid: "QmEvidence"
+        }
+      );
 
       portal.createComplaint("testuser", "Case 1", "Description 1", [doc.id]);
       portal.createComplaint("testuser", "Case 2", "Description 2", [doc.id]);
@@ -624,11 +681,16 @@ describe("ClientPortal", () => {
       await portal.registerClient("testuser", "password123", "test@example.com");
       await portal.setupEncryption("testuser", "password123", "solana_key");
 
-      const doc = await portal.encryptDocument("testuser", Buffer.from("Test"), {
-        type: "complaint",
-        name: "test.pdf",
-        cid: "QmTest"
-      });
+      const doc = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("Test"),
+        {
+          type: "complaint",
+          name: "test.pdf",
+          cid: "QmTest"
+        }
+      );
 
       // Update password
       await portal.updatePassword("testuser", "password123", "newpassword456");
