@@ -325,6 +325,7 @@
             <button class="nav-tab" onclick="switchTab('proposals', event)">📋 Proposals</button>
             <button class="nav-tab" onclick="switchTab('campaigns', event)">💰 Campaigns</button>
             <button class="nav-tab" onclick="switchTab('accounts', event)">👥 Accounts</button>
+            <button class="nav-tab" onclick="switchTab('user-profiles', event)">👤 User Profiles</button>
             <button class="nav-tab" onclick="switchTab('transactions', event)">💸 Transactions</button>
         </div>
 
@@ -467,6 +468,96 @@
             </div>
         </div>
 
+        <!-- User Profiles Tab -->
+        <div id="user-profiles" class="tab-content">
+            <div class="card">
+                <h2>User Profile Analysis</h2>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterUserProfiles('all', event)">All Users</button>
+                    <button class="filter-btn" onclick="filterUserProfiles('user', event)">Investors</button>
+                    <button class="filter-btn" onclick="filterUserProfiles('client', event)">Clients</button>
+                    <button class="filter-btn" onclick="filterUserProfiles('attorney', event)">Attorneys</button>
+                </div>
+                <input type="text" class="search-bar" placeholder="Search by name, email, or wallet address... (demo only)" id="profile-search">
+                
+                <div id="profile-list">
+                    <!-- Profile cards will be displayed here -->
+                    <div class="empty-state">
+                        <div>Select a user type or search to view detailed profiles with cross-linked data.</div>
+                        <p style="margin-top: 10px; font-size: 0.9em;">Profiles include: campaigns participated, proposals submitted/managed, transaction history, analytics, and cross-references to other admin sections.</p>
+                    </div>
+                </div>
+
+                <!-- Analytics Summary -->
+                <div style="margin-top: 30px;">
+                    <h3>User Analytics Summary</h3>
+                    <div class="stats-grid" style="margin-top: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-users">0</div>
+                            <div class="stat-label">Total Investors</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-clients">0</div>
+                            <div class="stat-label">Total Clients</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-attorneys">0</div>
+                            <div class="stat-label">Total Attorneys</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="active-users-week">0</div>
+                            <div class="stat-label">Active (Last Week)</div>
+                        </div>
+                    </div>
+
+                    <!-- Top Contributors -->
+                    <div class="card" style="margin-top: 20px;">
+                        <h3>Top Contributors</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Wallet</th>
+                                    <th>Total Contributed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-contributors">
+                                <tr>
+                                    <td colspan="4" class="empty-state">
+                                        <div>No contribution data available. This is a demo interface.</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Top Attorneys -->
+                    <div class="card" style="margin-top: 20px;">
+                        <h3>Top Attorneys by Cases</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Wallet</th>
+                                    <th>Total Cases</th>
+                                    <th>Success Rate</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-attorneys">
+                                <tr>
+                                    <td colspan="5" class="empty-state">
+                                        <div>No attorney data available. This is a demo interface.</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Transactions Tab -->
         <div id="transactions" class="tab-content">
             <div class="card">
@@ -551,6 +642,19 @@
             // In a real implementation, this would filter the table rows
         }
 
+        // Filter functionality for user profiles
+        function filterUserProfiles(type, event) {
+            const buttons = document.querySelectorAll('#user-profiles .filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('Filtering user profiles by:', type);
+            // In a real implementation, this would:
+            // 1. Call dashboard.getUserProfile() for each user of the specified type
+            // 2. Display detailed profile cards with cross-linked data
+            // 3. Show campaigns, proposals, transactions, and analytics for each user
+        }
+
         // Filter functionality for transactions
         function filterTransactions(type, event) {
             const buttons = document.querySelectorAll('#transactions .filter-btn');
@@ -570,6 +674,12 @@
             document.getElementById('dao-fees').textContent = '125 SOL';
             document.getElementById('total-accounts').textContent = '47';
             document.getElementById('pending-proposals').textContent = '3';
+            
+            // User analytics data (from dashboard.getUserAnalytics())
+            document.getElementById('total-users').textContent = '32';
+            document.getElementById('total-clients').textContent = '8';
+            document.getElementById('total-attorneys').textContent = '7';
+            document.getElementById('active-users-week').textContent = '18';
         }
 
         // Initialize the dashboard

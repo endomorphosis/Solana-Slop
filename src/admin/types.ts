@@ -131,3 +131,76 @@ export interface DashboardStats {
   /** Pending proposals */
   pendingProposals: number;
 }
+
+/**
+ * Detailed user profile with cross-linked data
+ */
+export interface UserProfile {
+  /** Account information */
+  account: AccountInfo;
+  /** Campaigns this user has contributed to */
+  campaigns: string[];
+  /** Proposals where this user is client or attorney */
+  proposals: string[];
+  /** Transaction history for this user */
+  transactions: TransactionRecord[];
+  /** Invoice payments (for attorneys) */
+  invoicePayments?: {
+    invoiceId: string;
+    amount: number;
+    campaignId: string;
+    timestamp: number;
+  }[];
+  /** Court fees deposited (for attorneys) */
+  courtFeesDeposited?: {
+    campaignId: string;
+    amount: number;
+    timestamp: number;
+  }[];
+  /** Analytics data */
+  analytics: {
+    /** Total contributed amount */
+    totalContributed: number;
+    /** Total received amount (invoices, court awards) */
+    totalReceived: number;
+    /** Number of active campaigns */
+    activeCampaigns: number;
+    /** Number of completed campaigns */
+    completedCampaigns: number;
+    /** Success rate (for attorneys/clients) */
+    successRate?: number;
+    /** Average contribution amount */
+    averageContribution?: number;
+  };
+}
+
+/**
+ * User analytics aggregation
+ */
+export interface UserAnalytics {
+  /** User type distribution */
+  userTypeDistribution: {
+    users: number;
+    clients: number;
+    attorneys: number;
+  };
+  /** Top contributors */
+  topContributors: {
+    publicKey: PublicKeyLike;
+    name: string;
+    totalContributed: number;
+  }[];
+  /** Top attorneys by cases */
+  topAttorneys: {
+    publicKey: PublicKeyLike;
+    name: string;
+    totalCases: number;
+    successRate: number;
+  }[];
+  /** Active users statistics */
+  activeUsers: {
+    total: number;
+    lastWeek: number;
+    lastMonth: number;
+  };
+}

@@ -418,4 +418,284 @@ describe("AdminDashboard", () => {
       expect(accounts[1].name).toBe("User 3");
     });
   });
+
+  describe("User Profile Analysis", () => {
+    let config: CampaignConfig;
+    let campaign: Campaign;
+
+    beforeEach(() => {
+      config = {
+        id: "campaign1",
+        minRaiseLamports: 1000,
+        deadlineUnix: 2000,
+        refundWindowStartUnix: 3000,
+        signers: ["attorney1", "platform1", "client1"],
+        daoTreasury: "dao_treasury"
+      };
+      campaign = new Campaign(config, clock);
+      dashboard.registerCampaign(campaign, "campaign1");
+    });
+
+    it("should get user profile with cross-linked data", () => {
+      // Register accounts
+      dashboard.registerAccount("user1", "user", "User One", "user1@example.com");
+      dashboard.registerAccount("attorney1", "attorney", "Attorney One", "attorney1@example.com");
+      
+      // Record transactions
+      dashboard.recordTransaction({
+        id: "tx1",
+        timestamp: 1000,
+        type: "contribution",
+        amount: 500,
+        from: "user1",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
+
+      dashboard.recordTransaction({
+        id: "tx2",
+        timestamp: 1100,
+        type: "contribution",
+        amount: 300,
+        from: "user1",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
+
+      const profile = dashboard.getUserProfile("user1");
+
+      expect(profile).toBeDefined();
+      expect(profile?.account.name).toBe("User One");
+      expect(profile?.campaigns).toContain("campaign1");
+      expect(profile?.transactions).toHaveLength(2);
+      expect(profile?.analytics.totalContributed).toBe(800);
+      expect(profile?.analytics.activeCampaigns).toBeGreaterThan(0);
+    });
+
+    it("should include proposals for attorneys in profile", () => {
+      dashboard.registerAccount("attorney1", "attorney", "Attorney One", "attorney1@example.com");
+      dashboard.registerAccount("client1", "client", "Client One", "client1@example.com");
+
+      dashboard.submitProposal(
+        "campaign1",
+        "client1",
+        "attorney1",
+        100000,
+        2000,
+        "Test case"
+      );
+
+      const profile = dashboard.getUserProfile("attorney1");
+
+      expect(profile).toBeDefined();
+      expect(profile?.proposals).toContain("campaign1");
+    });
+
+    it("should include invoice payments for attorneys", () => {
+      dashboard.registerAccount("attorney1", "attorney", "Attorney One", "attorney1@example.com");
+
+      dashboard.recordTransaction({
+        id: "tx1",
+        timestamp: 1000,
+        type: "invoice_payment",
+        amount: 5000,
+        from: "campaign1",
+        to: "attorney1",
+        campaignId: "campaign1",
+        metadata: { invoiceId: "INV-001" }
+      });
+
+      const profile = dashboard.getUserProfile("attorney1");
+
+      expect(profile).toBeDefined();
+      expect(profile?.invoicePayments).toBeDefined();
+      expect(profile?.invoicePayments).toHaveLength(1);
+      expect(profile?.invoicePayments?.[0].amount).toBe(5000);
+      expect(profile?.analytics.totalReceived).toBe(5000);
+    });
+
+    it("should calculate success rate for attorneys", () => {
+      dashboard.registerAccount("attorney1", "attorney", "Attorney One", "attorney1@example.com");
+      dashboard.registerAccount("client1", "client", "Client One", "client1@example.com");
+
+      // Submit proposal
+      dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Case 1");
+
+      // Make campaign successful
+      campaign.contribute("user1", 1000);
+      clock.setTime(2001);
+      campaign.evaluate();
+      campaign.recordOutcome("win", 50000);
+
+      // Record transaction to link attorney to campaign (invoice payment)
+      dashboard.recordTransaction({
+        id: "tx1",
+        timestamp: 1500,
+        type: "invoice_payment",
+        amount: 5000,
+        from: "campaign1",
+        to: "attorney1",
+        campaignId: "campaign1"
+      });
+
+      const profile = dashboard.getUserProfile("attorney1");
+
+      expect(profile).toBeDefined();
+      expect(profile?.proposals).toContain("campaign1");
+      // Success rate is calculated based on completed campaigns where attorney is involved
+      // Since we have 1 proposal, success rate should be defined
+      expect(profile?.analytics.successRate).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should calculate average contribution for users", () => {
+      dashboard.registerAccount("user1", "user", "User One", "user1@example.com");
+
+      dashboard.recordTransaction({
+        id: "tx1",
+        timestamp: 1000,
+        type: "contribution",
+        amount: 500,
+        from: "user1",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
+
+      dashboard.recordTransaction({
+        id: "tx2",
+        timestamp: 1100,
+        type: "contribution",
+        amount: 300,
+        from: "user1",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
+
+      const profile = dashboard.getUserProfile("user1");
+
+      expect(profile).toBeDefined();
+      expect(profile?.analytics.averageContribution).toBe(800); // Total 800 / 1 campaign
+    });
+  });
+
+  describe("User Analytics", () => {
+    beforeEach(() => {
+      dashboard.registerAccount("user1", "user", "User 1", "user1@example.com");
+      dashboard.registerAccount("user2", "user", "User 2", "user2@example.com");
+      dashboard.registerAccount("client1", "client", "Client 1", "client1@example.com");
+      dashboard.registerAccount("attorney1", "attorney", "Attorney 1", "attorney1@example.com");
+      dashboard.registerAccount("attorney2", "attorney", "Attorney 2", "attorney2@example.com");
+    });
+
+    it("should calculate user type distribution", () => {
+      const analytics = dashboard.getUserAnalytics();
+
+      expect(analytics.userTypeDistribution.users).toBe(2);
+      expect(analytics.userTypeDistribution.clients).toBe(1);
+      expect(analytics.userTypeDistribution.attorneys).toBe(2);
+    });
+
+    it("should identify top contributors", () => {
+      dashboard.recordTransaction({
+        id: "tx1",
+        timestamp: 1000,
+        type: "contribution",
+        amount: 1000,
+        from: "user1",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
+
+      dashboard.recordTransaction({
+        id: "tx2",
+        timestamp: 1100,
+        type: "contribution",
+        amount: 500,
+        from: "user2",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
+
+      const analytics = dashboard.getUserAnalytics();
+
+      expect(analytics.topContributors).toHaveLength(2);
+      expect(analytics.topContributors[0].publicKey).toBe("user1");
+      expect(analytics.topContributors[0].totalContributed).toBe(1000);
+    });
+
+    it("should identify top attorneys by cases", () => {
+      dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Case 1");
+      dashboard.submitProposal("campaign2", "client1", "attorney1", 2000, 2000, "Case 2");
+      dashboard.submitProposal("campaign3", "client1", "attorney2", 1500, 2000, "Case 3");
+
+      const analytics = dashboard.getUserAnalytics();
+
+      expect(analytics.topAttorneys.length).toBeGreaterThan(0);
+      expect(analytics.topAttorneys[0].publicKey).toBe("attorney1");
+      expect(analytics.topAttorneys[0].totalCases).toBe(2);
+    });
+
+    it("should track active users", () => {
+      clock.setTime(1000);
+      
+      dashboard.recordTransaction({
+        id: "tx1",
+        timestamp: 1000,
+        type: "contribution",
+        amount: 500,
+        from: "user1",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
+
+      const analytics = dashboard.getUserAnalytics();
+
+      expect(analytics.activeUsers.total).toBe(5); // All accounts are active by default
+      expect(analytics.activeUsers.lastMonth).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  describe("User Search", () => {
+    beforeEach(() => {
+      dashboard.registerAccount("user1", "user", "John Doe", "john@example.com");
+      dashboard.registerAccount("user2", "user", "Jane Smith", "jane@example.com");
+      dashboard.registerAccount("client1", "client", "Bob Johnson", "bob@company.com");
+      dashboard.registerAccount("attorney1", "attorney", "Alice Williams", "alice@law.com");
+    });
+
+    it("should search users by name", () => {
+      const results = dashboard.searchUsers("john");
+      
+      expect(results).toHaveLength(2); // John and Johnson
+      expect(results.some(r => r.name === "John Doe")).toBe(true);
+      expect(results.some(r => r.name === "Bob Johnson")).toBe(true);
+    });
+
+    it("should search users by email", () => {
+      const results = dashboard.searchUsers("law.com");
+      
+      expect(results).toHaveLength(1);
+      expect(results[0].name).toBe("Alice Williams");
+    });
+
+    it("should search users by wallet", () => {
+      const results = dashboard.searchUsers("user1");
+      
+      expect(results).toHaveLength(1);
+      expect(results[0].publicKey).toBe("user1");
+    });
+
+    it("should filter search by account type", () => {
+      const results = dashboard.searchUsers("john", "user");
+      
+      expect(results).toHaveLength(1);
+      expect(results[0].name).toBe("John Doe");
+      expect(results[0].type).toBe("user");
+    });
+
+    it("should return empty array for no matches", () => {
+      const results = dashboard.searchUsers("nonexistent");
+      
+      expect(results).toHaveLength(0);
+    });
+  });
 });

@@ -6,5 +6,7 @@ export type {
   ProposalStatus,
   CampaignSummary,
   TransactionRecord,
-  DashboardStats
+  DashboardStats,
+  UserProfile,
+  UserAnalytics
 } from "./types.js";

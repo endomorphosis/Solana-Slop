@@ -7,7 +7,9 @@ import type {
   ProposalStatus,
   CampaignSummary,
   TransactionRecord,
-  DashboardStats
+  DashboardStats,
+  UserProfile,
+  UserAnalytics
 } from "./types.js";
 
 /**
@@ -318,5 +320,210 @@ export class AdminDashboard {
     return wallets
       .map(wallet => this.accounts.get(wallet))
       .filter((acc): acc is AccountInfo => acc !== undefined);
+  }
+
+  /**
+   * Get detailed user profile with cross-linked data
+   */
+  getUserProfile(publicKey: PublicKeyLike): UserProfile | undefined {
+    const account = this.accounts.get(publicKey);
+    if (!account) {
+      return undefined;
+    }
+
+    // Find campaigns this user is involved in
+    const userCampaigns: string[] = [];
+    const campaignContributions = new Map<string, number>();
+    
+    // Check transactions for contributions
+    const userTransactions = this.getWalletTransactions(publicKey);
+    for (const tx of userTransactions) {
+      if (tx.type === "contribution" && tx.from === publicKey) {
+        if (!userCampaigns.includes(tx.campaignId)) {
+          userCampaigns.push(tx.campaignId);
+        }
+        campaignContributions.set(
+          tx.campaignId,
+          (campaignContributions.get(tx.campaignId) || 0) + tx.amount
+        );
+      }
+    }
+
+    // Find proposals where user is client or attorney
+    const userProposals = Array.from(this.proposals.values())
+      .filter(p => p.client === publicKey || p.attorney === publicKey)
+      .map(p => p.campaignId);
+
+    // For attorneys and clients, also include proposal campaigns in their campaigns list
+    if (account.type === "attorney" || account.type === "client") {
+      for (const proposalCampaignId of userProposals) {
+        if (!userCampaigns.includes(proposalCampaignId)) {
+          userCampaigns.push(proposalCampaignId);
+        }
+      }
+    }
+
+    // Extract invoice payments for attorneys
+    const invoicePayments = userTransactions
+      .filter(tx => tx.type === "invoice_payment" && tx.to === publicKey)
+      .map(tx => ({
+        invoiceId: tx.metadata?.invoiceId as string || tx.id,
+        amount: tx.amount,
+        campaignId: tx.campaignId,
+        timestamp: tx.timestamp
+      }));
+
+    // Extract court fees for attorneys
+    const courtFeesDeposited = userTransactions
+      .filter(tx => (tx.type === "court_fee" || tx.type === "court_award") && tx.from === publicKey)
+      .map(tx => ({
+        campaignId: tx.campaignId,
+        amount: tx.amount,
+        timestamp: tx.timestamp
+      }));
+
+    // Calculate analytics
+    const totalContributed = userTransactions
+      .filter(tx => tx.type === "contribution" && tx.from === publicKey)
+      .reduce((sum, tx) => sum + tx.amount, 0);
+
+    const totalReceived = userTransactions
+      .filter(tx => tx.to === publicKey && (tx.type === "invoice_payment" || tx.type === "court_award"))
+      .reduce((sum, tx) => sum + tx.amount, 0);
+
+    // Count active and completed campaigns
+    let activeCampaigns = 0;
+    let completedCampaigns = 0;
+    let wonCampaigns = 0;
+
+    for (const campaignId of userCampaigns) {
+      const campaign = this.campaigns.get(campaignId);
+      if (campaign) {
+        const status = campaign.getStatus();
+        if (status === "active" || status === "appeal_active" || status === "locked") {
+          activeCampaigns++;
+        } else {
+          completedCampaigns++;
+          if (status === "won" || status === "settled") {
+            wonCampaigns++;
+          }
+        }
+      }
+    }
+
+    // Calculate success rate for attorneys/clients
+    let successRate: number | undefined;
+    if (account.type === "attorney" || account.type === "client") {
+      const totalCases = userProposals.length;
+      if (totalCases > 0 && completedCampaigns > 0) {
+        successRate = wonCampaigns / completedCampaigns;
+      }
+    }
+
+    // Calculate average contribution
+    let averageContribution: number | undefined;
+    if (userCampaigns.length > 0) {
+      averageContribution = totalContributed / userCampaigns.length;
+    }
+
+    return {
+      account,
+      campaigns: userCampaigns,
+      proposals: userProposals,
+      transactions: userTransactions,
+      invoicePayments: invoicePayments.length > 0 ? invoicePayments : undefined,
+      courtFeesDeposited: courtFeesDeposited.length > 0 ? courtFeesDeposited : undefined,
+      analytics: {
+        totalContributed,
+        totalReceived,
+        activeCampaigns,
+        completedCampaigns,
+        successRate,
+        averageContribution
+      }
+    };
+  }
+
+  /**
+   * Get user analytics across the platform
+   */
+  getUserAnalytics(): UserAnalytics {
+    const allAccounts = Array.from(this.accounts.values());
+    
+    // User type distribution
+    const userTypeDistribution = {
+      users: allAccounts.filter(acc => acc.type === "user").length,
+      clients: allAccounts.filter(acc => acc.type === "client").length,
+      attorneys: allAccounts.filter(acc => acc.type === "attorney").length
+    };
+
+    // Top contributors
+    const topContributors = allAccounts
+      .filter(acc => acc.totalContributed > 0)
+      .sort((a, b) => b.totalContributed - a.totalContributed)
+      .slice(0, 10)
+      .map(acc => ({
+        publicKey: acc.publicKey,
+        name: acc.name,
+        totalContributed: acc.totalContributed
+      }));
+
+    // Top attorneys by cases
+    const attorneys = allAccounts.filter(acc => acc.type === "attorney");
+    const topAttorneys = attorneys
+      .map(attorney => {
+        const profile = this.getUserProfile(attorney.publicKey);
+        const totalCases = profile?.proposals.length || 0;
+        const successRate = profile?.analytics.successRate || 0;
+        return {
+          publicKey: attorney.publicKey,
+          name: attorney.name,
+          totalCases,
+          successRate
+        };
+      })
+      .filter(a => a.totalCases > 0)
+      .sort((a, b) => b.totalCases - a.totalCases)
+      .slice(0, 10);
+
+    // Active users statistics
+    const now = this.clock.now();
+    const oneWeekAgo = now - 7 * 24 * 60 * 60;
+    const oneMonthAgo = now - 30 * 24 * 60 * 60;
+
+    const recentTransactions = this.transactions.filter(tx => tx.timestamp >= oneMonthAgo);
+    const activeUsersLastWeek = new Set(
+      this.transactions
+        .filter(tx => tx.timestamp >= oneWeekAgo)
+        .map(tx => tx.from)
+    ).size;
+    const activeUsersLastMonth = new Set(
+      recentTransactions.map(tx => tx.from)
+    ).size;
+
+    return {
+      userTypeDistribution,
+      topContributors,
+      topAttorneys,
+      activeUsers: {
+        total: allAccounts.filter(acc => acc.isActive).length,
+        lastWeek: activeUsersLastWeek,
+        lastMonth: activeUsersLastMonth
+      }
+    };
+  }
+
+  /**
+   * Search users by name, email, or wallet with optional type filter
+   */
+  searchUsers(query: string, type?: AccountType): AccountInfo[] {
+    const lowerQuery = query.toLowerCase();
+    const allAccounts = type ? this.listAccounts(type) : this.listAccounts();
+    
+    return allAccounts.filter(acc => 
+      acc.name.toLowerCase().includes(lowerQuery) ||
+      acc.email.toLowerCase().includes(lowerQuery) ||
+      acc.publicKey.toLowerCase().includes(lowerQuery)
+    );
   }
 }
