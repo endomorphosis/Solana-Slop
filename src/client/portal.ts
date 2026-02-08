@@ -16,6 +16,15 @@ import type {
   EmailVerificationRequest,
   KYCVerificationResponse
 } from "./types.js";
+import {
+  ComplaintGeneratorBridge,
+  type ComplaintClassification,
+  type LegalStatute,
+  type EvidenceSuggestion,
+  type LegalResource,
+  type WebArchiveResult,
+  type ComplaintGenerationResult
+} from "./complaint-generator-bridge.js";
 
 /**
  * ClientPortal manages client registration, authentication, KYC, encryption,
@@ -27,6 +36,7 @@ export class ClientPortal {
   private readonly encryptedDocuments = new Map<string, EncryptedDocument>();
   private readonly documentContents = new Map<string, Buffer>(); // Encrypted document content storage
   private readonly clock: Clock;
+  private readonly complaintGenerator: ComplaintGeneratorBridge;
   
   // Encryption constants
   private readonly ALGORITHM = "aes-256-gcm";
@@ -38,6 +48,7 @@ export class ClientPortal {
 
   constructor(clock: Clock) {
     this.clock = clock;
+    this.complaintGenerator = new ComplaintGeneratorBridge();
   }
 
   /**
@@ -879,20 +890,37 @@ export class ClientPortal {
   }
 
   /**
-   * Integration with complaint-generator Python package
-   * In production, this would call the Python API via HTTP or subprocess
+   * Generate a mock IPFS CID for development/testing
    */
-  private async integrateWithComplaintGenerator(complaint: ComplaintSubmission): Promise<string> {
-    // PLACEHOLDER: Simulate complaint generation
-    // In production:
-    // 1. Call complaint-generator API with complaint details
-    // 2. Get back classification, analysis, and generated legal document
-    // 3. Upload generated document to IPFS
-    // 4. Return IPFS CID
-    
+  private generateMockCID(): string {
     // NOTE: This generates a mock CID format for demonstration
     // Real IPFS CIDs use base58 encoding (e.g., QmXxx with 46 characters)
     return `ipfs://Qm${crypto.randomBytes(22).toString("base64").replace(/[+/=]/g, "")}`;
+  }
+
+  /**
+   * Integration with complaint-generator Python package
+   * Calls the Python API to analyze and classify the complaint
+   */
+  private async integrateWithComplaintGenerator(complaint: ComplaintSubmission): Promise<string> {
+    try {
+      // Generate complete analysis using the complaint generator
+      const result = await this.complaintGenerator.generateComplaint(complaint.description);
+      
+      // Store the analysis results in the complaint
+      complaint.generatedComplaint = {
+        cid: this.generateMockCID(),
+        generatedAt: this.clock.now(),
+        classification: result.classification,
+        analysis: result.analysis
+      };
+
+      return complaint.generatedComplaint.cid;
+    } catch (error) {
+      console.error("Error integrating with complaint generator:", error);
+      // Fall back to mock CID if integration fails
+      return this.generateMockCID();
+    }
   }
 
   /**
@@ -994,5 +1022,60 @@ export class ClientPortal {
         profile.credentials.email.toLowerCase().includes(lowerQuery)
       );
     });
+  }
+
+  /**
+   * Classify a complaint using AI-powered analysis
+   */
+  async classifyComplaint(complaintText: string): Promise<ComplaintClassification> {
+    return await this.complaintGenerator.classifyComplaint(complaintText);
+  }
+
+  /**
+   * Retrieve relevant legal statutes for a complaint
+   */
+  async retrieveStatutes(
+    complaintText: string,
+    classification?: ComplaintClassification
+  ): Promise<LegalStatute[]> {
+    return await this.complaintGenerator.retrieveStatutes(complaintText, classification);
+  }
+
+  /**
+   * Generate evidence-gathering questions
+   */
+  async generateEvidenceQuestions(
+    complaintText: string,
+    classification?: ComplaintClassification
+  ): Promise<EvidenceSuggestion[]> {
+    return await this.complaintGenerator.generateEvidenceQuestions(complaintText, classification);
+  }
+
+  /**
+   * Search for legal resources
+   */
+  async searchLegalResources(query: string): Promise<LegalResource[]> {
+    return await this.complaintGenerator.searchLegalResources(query);
+  }
+
+  /**
+   * Search web archives for evidence
+   */
+  async searchWebArchives(query: string): Promise<WebArchiveResult[]> {
+    return await this.complaintGenerator.searchWebArchives(query);
+  }
+
+  /**
+   * Complete complaint generation workflow
+   */
+  async generateComplaintWithAI(complaintText: string): Promise<ComplaintGenerationResult> {
+    return await this.complaintGenerator.generateComplaint(complaintText);
+  }
+
+  /**
+   * Check if complaint generator is available
+   */
+  async isComplaintGeneratorAvailable(): Promise<boolean> {
+    return await this.complaintGenerator.isAvailable();
   }
 }

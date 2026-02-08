@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Complaint Generator Portal - Solana Crowdfunding Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .user-info {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            color: #333;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 20px;
+        }
+
+        .sidebar {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            height: fit-content;
+        }
+
+        .sidebar h3 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+        }
+
+        .nav-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 1em;
+            transition: background 0.3s;
+        }
+
+        .nav-btn:hover {
+            background: #5568d3;
+        }
+
+        .nav-btn.active {
+            background: #764ba2;
+        }
+
+        .content-area {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            min-height: 600px;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 2em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #555;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background 0.3s;
+        }
+
+        .btn:hover {
+            background: #5568d3;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .result-box {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .result-box h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .result-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-item h4 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .result-item p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .badge-high {
+            background: #dc3545;
+            color: white;
+        }
+
+        .badge-medium {
+            background: #ffc107;
+            color: #333;
+        }
+
+        .badge-low {
+            background: #28a745;
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .error {
+            padding: 15px;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 8px;
+            color: #721c24;
+            margin-bottom: 20px;
+        }
+
+        .success {
+            padding: 15px;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            color: #155724;
+            margin-bottom: 20px;
+        }
+
+        .info-box {
+            padding: 15px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .info-box p {
+            color: #0d47a1;
+            margin: 0;
+        }
+
+        .statute-item {
+            border-left: 4px solid #28a745;
+        }
+
+        .question-item {
+            border-left: 4px solid #ffc107;
+        }
+
+        .resource-item {
+            border-left: 4px solid #667eea;
+        }
+
+        .archive-item {
+            border-left: 4px solid #ff5722;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ddd;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            color: #666;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .logout-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        .logout-btn:hover {
+            background: #c82333;
+        }
+
+        .stat-card {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .stat-card h4 {
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .stat-card .value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <div class="container">
+        <div class="header">
+            <h1>⚖️ Complaint Generator Portal</h1>
+            <p>AI-powered legal complaint generation and evidence management</p>
+            <div class="user-info" id="userInfo">
+                <strong>Welcome!</strong> Please log in to access the complaint generator.
+            </div>
+        </div>
+
+        <div id="loginSection" style="max-width: 500px; margin: 0 auto;">
+            <div style="background: white; padding: 40px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);">
+                <h2 style="text-align: center; margin-bottom: 30px;">Login</h2>
+                <div class="form-group">
+                    <label for="loginUsername">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password">
+                </div>
+                <button class="btn" style="width: 100%;" onclick="login()">Login</button>
+                <p style="text-align: center; margin-top: 20px; color: #666;">
+                    Don't have an account? <a href="client-signup.html" style="color: #667eea;">Sign up here</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="main-content" id="mainContent" style="display: none;">
+            <div class="sidebar">
+                <h3>Navigation</h3>
+                <button class="nav-btn active" onclick="showSection('generate')">
+                    📝 Generate Complaint
+                </button>
+                <button class="nav-btn" onclick="showSection('evidence')">
+                    📂 Evidence Questions
+                </button>
+                <button class="nav-btn" onclick="showSection('legal')">
+                    📚 Legal Resources
+                </button>
+                <button class="nav-btn" onclick="showSection('archives')">
+                    🌐 Web Archives
+                </button>
+                <button class="nav-btn" onclick="showSection('complaints')">
+                    📋 My Complaints
+                </button>
+            </div>
+
+            <div class="content-area">
+                <!-- Generate Complaint Section -->
+                <div id="generate" class="section active">
+                    <h2>Generate Legal Complaint</h2>
+                    
+                    <div class="info-box">
+                        <p><strong>How it works:</strong> Describe your legal issue below, and our AI will classify it, identify relevant laws, and suggest evidence to gather.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="complaintText">Describe Your Legal Issue</label>
+                        <textarea id="complaintText" placeholder="Provide a detailed description of your legal complaint. Include relevant dates, parties involved, and specific incidents..."></textarea>
+                    </div>
+
+                    <button class="btn" onclick="generateComplaint()">🤖 Generate Complaint Analysis</button>
+
+                    <div id="generateResults"></div>
+                </div>
+
+                <!-- Evidence Questions Section -->
+                <div id="evidence" class="section">
+                    <h2>Evidence Gathering Questions</h2>
+                    
+                    <div class="info-box">
+                        <p><strong>AI-powered guidance:</strong> Get specific questions to help you gather the right evidence for your case.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="evidenceText">Your Legal Issue</label>
+                        <textarea id="evidenceText" placeholder="Describe your legal issue..."></textarea>
+                    </div>
+
+                    <button class="btn" onclick="getEvidenceQuestions()">💡 Get Evidence Questions</button>
+
+                    <div id="evidenceResults"></div>
+                </div>
+
+                <!-- Legal Resources Section -->
+                <div id="legal" class="section">
+                    <h2>Search Legal Resources</h2>
+                    
+                    <div class="info-box">
+                        <p><strong>Legal research:</strong> Search for relevant laws, regulations, and court decisions.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="legalQuery">Search Query</label>
+                        <input type="text" id="legalQuery" placeholder="e.g., employment discrimination, civil rights, contract breach...">
+                    </div>
+
+                    <button class="btn" onclick="searchLegal()">🔍 Search Legal Resources</button>
+
+                    <div id="legalResults"></div>
+                </div>
+
+                <!-- Web Archives Section -->
+                <div id="archives" class="section">
+                    <h2>Search Web Archives</h2>
+                    
+                    <div class="info-box">
+                        <p><strong>Web evidence:</strong> Search archived web pages for evidence related to your case.</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="archiveQuery">Search Query</label>
+                        <input type="text" id="archiveQuery" placeholder="Enter keywords to search web archives...">
+                    </div>
+
+                    <button class="btn" onclick="searchArchives()">🌐 Search Web Archives</button>
+
+                    <div id="archiveResults"></div>
+                </div>
+
+                <!-- My Complaints Section -->
+                <div id="complaints" class="section">
+                    <h2>My Complaints</h2>
+                    
+                    <div class="info-box">
+                        <p><strong>Manage your complaints:</strong> View and manage all your complaint submissions.</p>
+                    </div>
+
+                    <div id="complaintsResults">
+                        <div class="loading">Loading your complaints...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Simulated user session
+        let currentUser = null;
+
+        // Login function
+        function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                alert('Please enter both username and password');
+                return;
+            }
+
+            // In production, this would call the backend API
+            // For demo, we simulate a successful login
+            currentUser = {
+                username: username,
+                email: `${username}@example.com`,
+                status: 'verified'
+            };
+
+            document.getElementById('userInfo').innerHTML = `
+                <strong>Welcome, ${currentUser.username}!</strong> | Status: ${currentUser.status}
+            `;
+
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('mainContent').style.display = 'grid';
+
+            loadComplaints();
+        }
+
+        // Logout function
+        function logout() {
+            currentUser = null;
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('mainContent').style.display = 'none';
+            document.getElementById('loginUsername').value = '';
+            document.getElementById('loginPassword').value = '';
+        }
+
+        // Show section
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            // Find and activate the button that was clicked
+            document.querySelector(`[onclick*="showSection('${sectionId}')"]`)?.classList.add('active');
+
+            // Load complaints if that section is selected
+            if (sectionId === 'complaints') {
+                loadComplaints();
+            }
+        }
+
+        // Generate complaint
+        async function generateComplaint() {
+            const text = document.getElementById('complaintText').value;
+            if (!text) {
+                alert('Please describe your legal issue');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('generateResults');
+            resultsDiv.innerHTML = '<div class="loading">🤖 Analyzing your complaint with AI...</div>';
+
+            // Simulate API call
+            setTimeout(() => {
+                const results = {
+                    classification: {
+                        claimTypes: ['civil_rights', 'employment_discrimination'],
+                        jurisdiction: 'federal',
+                        legalAreas: ['employment_law', 'civil_rights'],
+                        confidence: 0.85
+                    },
+                    statutes: [
+                        {
+                            citation: '42 U.S.C. § 2000e',
+                            title: 'Title VII of the Civil Rights Act of 1964',
+                            text: 'It shall be an unlawful employment practice for an employer to discriminate against any individual with respect to compensation, terms, conditions, or privileges of employment because of such individual\'s race, color, religion, sex, or national origin.',
+                            relevance: 0.95,
+                            source: 'US Code'
+                        },
+                        {
+                            citation: '42 U.S.C. § 1981',
+                            title: 'Equal rights under the law',
+                            text: 'All persons within the jurisdiction of the United States shall have the same right in every State and Territory to make and enforce contracts...',
+                            relevance: 0.88,
+                            source: 'US Code'
+                        }
+                    ],
+                    evidenceSuggestions: [
+                        {
+                            question: 'Do you have documentation of the discriminatory incidents?',
+                            category: 'evidence',
+                            priority: 'high',
+                            reasoning: 'Written documentation is crucial for proving discrimination claims'
+                        },
+                        {
+                            question: 'Were there any witnesses to the incidents?',
+                            category: 'witnesses',
+                            priority: 'high',
+                            reasoning: 'Witness testimony can corroborate your account'
+                        }
+                    ],
+                    analysis: {
+                        strength: 'high',
+                        recommendations: [
+                            'Complaint appears well-documented and legally supported',
+                            'Gather 2 high-priority pieces of evidence'
+                        ]
+                    }
+                };
+
+                displayComplaintResults(results);
+            }, 2000);
+        }
+
+        function displayComplaintResults(results) {
+            const html = `
+                <div class="result-box">
+                    <h3>📊 Classification Results</h3>
+                    <div class="result-item">
+                        <h4>Claim Types</h4>
+                        <p>${results.classification.claimTypes.map(t => 
+                            `<span class="badge badge-medium">${t.replace(/_/g, ' ')}</span>`
+                        ).join('')}</p>
+                    </div>
+                    <div class="result-item">
+                        <h4>Jurisdiction</h4>
+                        <p><span class="badge badge-low">${results.classification.jurisdiction}</span></p>
+                    </div>
+                    <div class="result-item">
+                        <h4>Confidence</h4>
+                        <p><strong>${(results.classification.confidence * 100).toFixed(0)}%</strong></p>
+                    </div>
+                </div>
+
+                <div class="result-box">
+                    <h3>⚖️ Relevant Statutes</h3>
+                    ${results.statutes.map(s => `
+                        <div class="result-item statute-item">
+                            <h4>${s.citation}</h4>
+                            <p><strong>${s.title}</strong></p>
+                            <p>${s.text}</p>
+                            <p><small>Source: ${s.source} | Relevance: ${(s.relevance * 100).toFixed(0)}%</small></p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="result-box">
+                    <h3>💡 Evidence Suggestions</h3>
+                    ${results.evidenceSuggestions.map(e => `
+                        <div class="result-item question-item">
+                            <h4>
+                                <span class="badge badge-${e.priority}">${e.priority.toUpperCase()}</span>
+                                ${e.question}
+                            </h4>
+                            <p>${e.reasoning}</p>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="result-box">
+                    <h3>📈 Analysis</h3>
+                    <div class="result-item">
+                        <h4>Strength: <span class="badge badge-${results.analysis.strength === 'high' ? 'high' : 'medium'}">${results.analysis.strength.toUpperCase()}</span></h4>
+                        <p><strong>Recommendations:</strong></p>
+                        <ul>
+                            ${results.analysis.recommendations.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    </div>
+                </div>
+
+                <button class="btn btn-success" onclick="saveComplaint()">💾 Save Complaint</button>
+            `;
+
+            document.getElementById('generateResults').innerHTML = html;
+        }
+
+        // Get evidence questions
+        async function getEvidenceQuestions() {
+            const text = document.getElementById('evidenceText').value;
+            if (!text) {
+                alert('Please describe your legal issue');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('evidenceResults');
+            resultsDiv.innerHTML = '<div class="loading">🤖 Generating evidence questions...</div>';
+
+            setTimeout(() => {
+                const questions = [
+                    {
+                        question: 'Do you have documentation of the discriminatory incidents?',
+                        category: 'evidence',
+                        priority: 'high',
+                        reasoning: 'Written documentation is crucial for proving discrimination claims'
+                    },
+                    {
+                        question: 'Were there any witnesses to the incidents?',
+                        category: 'witnesses',
+                        priority: 'high',
+                        reasoning: 'Witness testimony can corroborate your account'
+                    },
+                    {
+                        question: 'Did you report these incidents to HR or management?',
+                        category: 'internal_process',
+                        priority: 'medium',
+                        reasoning: 'Exhausting internal remedies is important for employment claims'
+                    }
+                ];
+
+                const html = `
+                    <div class="result-box">
+                        <h3>💡 Evidence Gathering Questions</h3>
+                        ${questions.map(q => `
+                            <div class="result-item question-item">
+                                <h4>
+                                    <span class="badge badge-${q.priority}">${q.priority.toUpperCase()}</span>
+                                    ${q.question}
+                                </h4>
+                                <p><strong>Category:</strong> ${q.category.replace(/_/g, ' ')}</p>
+                                <p>${q.reasoning}</p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                resultsDiv.innerHTML = html;
+            }, 1500);
+        }
+
+        // Search legal resources
+        async function searchLegal() {
+            const query = document.getElementById('legalQuery').value;
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('legalResults');
+            resultsDiv.innerHTML = '<div class="loading">🔍 Searching legal resources...</div>';
+
+            setTimeout(() => {
+                const resources = [
+                    {
+                        title: 'EEOC Guidelines on Employment Discrimination',
+                        url: 'https://www.eeoc.gov/laws/guidance',
+                        snippet: 'The Equal Employment Opportunity Commission provides comprehensive guidance on federal laws prohibiting employment discrimination.',
+                        source: 'EEOC',
+                        relevance: 0.92
+                    },
+                    {
+                        title: 'Civil Rights Law Overview',
+                        url: 'https://www.law.cornell.edu/wex/civil_rights',
+                        snippet: 'Civil rights are the rights of individuals to receive equal treatment in a number of settings, including education, employment, housing, and more.',
+                        source: 'Cornell Law',
+                        relevance: 0.87
+                    }
+                ];
+
+                const html = `
+                    <div class="result-box">
+                        <h3>📚 Legal Resources</h3>
+                        ${resources.map(r => `
+                            <div class="result-item resource-item">
+                                <h4><a href="${r.url}" target="_blank" style="color: #667eea; text-decoration: none;">${r.title}</a></h4>
+                                <p>${r.snippet}</p>
+                                <p><small>Source: ${r.source} | Relevance: ${(r.relevance * 100).toFixed(0)}%</small></p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                resultsDiv.innerHTML = html;
+            }, 1500);
+        }
+
+        // Search web archives
+        async function searchArchives() {
+            const query = document.getElementById('archiveQuery').value;
+            if (!query) {
+                alert('Please enter a search query');
+                return;
+            }
+
+            const resultsDiv = document.getElementById('archiveResults');
+            resultsDiv.innerHTML = '<div class="loading">🌐 Searching web archives...</div>';
+
+            setTimeout(() => {
+                const archives = [
+                    {
+                        url: 'https://example.com/relevant-article',
+                        title: 'Historical Context of Employment Law',
+                        snippet: 'This archived article discusses the evolution of employment discrimination law in the United States.',
+                        timestamp: '2020-01-15',
+                        archiveUrl: 'https://web.archive.org/web/20200115000000/https://example.com/relevant-article'
+                    }
+                ];
+
+                const html = `
+                    <div class="result-box">
+                        <h3>🌐 Web Archive Results</h3>
+                        ${archives.map(a => `
+                            <div class="result-item archive-item">
+                                <h4><a href="${a.archiveUrl}" target="_blank" style="color: #ff5722; text-decoration: none;">${a.title}</a></h4>
+                                <p>${a.snippet}</p>
+                                <p><small>Original URL: <a href="${a.url}" target="_blank">${a.url}</a></small></p>
+                                <p><small>Archived: ${a.timestamp}</small></p>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                resultsDiv.innerHTML = html;
+            }, 1500);
+        }
+
+        // Save complaint
+        function saveComplaint() {
+            const text = document.getElementById('complaintText').value;
+            alert('Complaint saved successfully! You can view it in the "My Complaints" section.');
+            
+            // Clear the form
+            document.getElementById('complaintText').value = '';
+            document.getElementById('generateResults').innerHTML = '';
+        }
+
+        // Load complaints
+        function loadComplaints() {
+            const resultsDiv = document.getElementById('complaintsResults');
+            
+            // Simulate loading complaints
+            setTimeout(() => {
+                const complaints = [
+                    {
+                        id: '1',
+                        title: 'Employment Discrimination Case',
+                        status: 'draft',
+                        createdAt: '2024-01-15',
+                        classification: {
+                            claimTypes: ['employment_discrimination'],
+                            confidence: 0.85
+                        }
+                    }
+                ];
+
+                if (complaints.length === 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="info-box">
+                            <p>You haven't created any complaints yet. Go to "Generate Complaint" to get started!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const html = `
+                    ${complaints.map(c => `
+                        <div class="result-item">
+                            <h4>${c.title}</h4>
+                            <p><span class="badge badge-medium">${c.status}</span></p>
+                            <p>Created: ${c.createdAt}</p>
+                            <p>Classification: ${c.classification.claimTypes.join(', ')}</p>
+                            <p>Confidence: ${(c.classification.confidence * 100).toFixed(0)}%</p>
+                            <button class="btn btn-secondary" onclick="viewComplaint('${c.id}')">View Details</button>
+                        </div>
+                    `).join('')}
+                `;
+
+                resultsDiv.innerHTML = html;
+            }, 500);
+        }
+
+        // View complaint details
+        function viewComplaint(id) {
+            alert('Viewing complaint ' + id);
+        }
+    </script>
+</body>
+</html>

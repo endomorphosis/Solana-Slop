@@ -13,3 +13,12 @@ export type {
   EmailVerificationRequest,
   KYCVerificationResponse
 } from "./types.js";
+export {
+  ComplaintGeneratorBridge,
+  type ComplaintClassification,
+  type LegalStatute,
+  type EvidenceSuggestion,
+  type LegalResource,
+  type WebArchiveResult,
+  type ComplaintGenerationResult
+} from "./complaint-generator-bridge.js";
