@@ -24,10 +24,20 @@ export type RefundReason = "auto_failed" | "multisig";
 /** Campaign outcome after trial/litigation */
 export type CampaignOutcome = "settlement" | "win" | "loss";
 
+/** Court level for appeals */
+export type CourtLevel = "district" | "appellate" | "state_supreme" | "us_supreme";
+
+/** Litigation path after an outcome */
+export type LitigationPath = "appeal" | "remand" | "retrial" | "final";
+
 /** Appeal round information */
 export interface AppealRound {
   /** Round number (1 for initial, 2+ for appeals) */
   roundNumber: number;
+  /** Court level for this round */
+  courtLevel: CourtLevel;
+  /** Litigation path taken */
+  path: LitigationPath;
   /** Minimum raise target for this appeal round */
   minRaiseLamports: number;
   /** Deadline for this appeal round */
@@ -36,6 +46,8 @@ export interface AppealRound {
   totalRaised: number;
   /** Outcome of the previous round (if applicable) */
   previousOutcome?: CampaignOutcome;
+  /** Whether fundraising was needed (false if sufficient funds already available) */
+  fundraisingNeeded: boolean;
 }
 
 /**

@@ -1,0 +1,33 @@
+{
+  "name": "Simple Win - No Appeal",
+  "description": "District court win, opposing party doesn't appeal",
+  "initialFunding": 150000,
+  "minRaise": 100000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 150000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 200000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 200000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "expectedAvailableFunds": 335000,
+  "notes": "150k raised - 15k fee + 200k award = 335k"
+}

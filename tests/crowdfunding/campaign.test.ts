@@ -382,7 +382,7 @@ describe("crowdfunding campaign", () => {
       expect(campaign.getInvoicePayments()[0].recipient).toBe(SYSTEM_RECIPIENT_COURT);
     });
 
-    it("requires only 1/3 approval for appeal after win", () => {
+    it("requires only 1/3 approval for appeal after win with fundraising", () => {
       const clock = new FakeClock(13_000);
       const campaign = new Campaign(
         {
@@ -404,16 +404,18 @@ describe("crowdfunding campaign", () => {
       expect(campaign.getStatus()).toBe("won");
 
       // Single signer can initiate appeal after win
-      campaign.approveAppeal(pubkey(attorney), 200, 14_000);
+      // Estimated cost 500 exceeds available funds (~135), so fundraising needed
+      campaign.approveAppeal(pubkey(attorney), 500, 14_000, "appellate", "appeal");
       
       expect(campaign.getStatus()).toBe("appeal_active");
       expect(campaign.getCurrentRound()).toBe(2);
       expect(campaign.getAppealRounds()).toHaveLength(1);
       expect(campaign.getAppealRounds()[0].roundNumber).toBe(2);
       expect(campaign.getAppealRounds()[0].previousOutcome).toBe("win");
+      expect(campaign.getAppealRounds()[0].fundraisingNeeded).toBe(true);
     });
 
-    it("requires 2/3 approval for appeal after loss", () => {
+    it("requires 2/3 approval for appeal after loss with fundraising", () => {
       const clock = new FakeClock(14_000);
       const campaign = new Campaign(
         {
@@ -435,16 +437,16 @@ describe("crowdfunding campaign", () => {
       expect(campaign.getStatus()).toBe("lost");
 
       // First approval
-      campaign.approveAppeal(pubkey(attorney), 200, 15_000);
+      campaign.approveAppeal(pubkey(attorney), 200, 15_000, "appellate", "appeal");
       expect(campaign.getStatus()).toBe("lost"); // Still lost, need 2
 
-      // Second approval triggers appeal
-      campaign.approveAppeal(pubkey(platform), 200, 15_000);
+      // Second approval triggers appeal (fundraising needed)
+      campaign.approveAppeal(pubkey(platform), 200, 15_000, "appellate", "appeal");
       expect(campaign.getStatus()).toBe("appeal_active");
       expect(campaign.getCurrentRound()).toBe(2);
     });
 
-    it("allows contributions to appeal round", () => {
+    it("allows contributions to appeal round when fundraising needed", () => {
       const clock = new FakeClock(15_000);
       const campaign = new Campaign(
         {
@@ -463,15 +465,15 @@ describe("crowdfunding campaign", () => {
       campaign.evaluate();
       campaign.recordOutcome("win");
 
-      // Initiate appeal (1/3 for win)
-      campaign.approveAppeal(pubkey(attorney), 200, 16_000);
+      // Initiate appeal (1/3 for win) with high estimated cost to trigger fundraising
+      campaign.approveAppeal(pubkey(attorney), 500, 16_000, "appellate", "appeal");
       expect(campaign.getStatus()).toBe("appeal_active");
 
       // Contribute to appeal
-      campaign.contributeToAppeal(pubkey(funderB), 100);
-      campaign.contributeToAppeal(pubkey(funderA), 120);
+      campaign.contributeToAppeal(pubkey(funderB), 200);
+      campaign.contributeToAppeal(pubkey(funderA), 200);
       
-      expect(campaign.getAppealRounds()[0].totalRaised).toBe(220);
+      expect(campaign.getAppealRounds()[0].totalRaised).toBe(400);
     });
 
     it("evaluates successful appeal round", () => {
@@ -493,19 +495,19 @@ describe("crowdfunding campaign", () => {
       campaign.evaluate();
       campaign.recordOutcome("win");
 
-      // Initiate and fund appeal
-      campaign.approveAppeal(pubkey(attorney), 200, 17_000);
-      campaign.contributeToAppeal(pubkey(funderB), 250);
+      // Initiate and fund appeal (need 500, have ~135)
+      campaign.approveAppeal(pubkey(attorney), 500, 17_000, "appellate", "appeal");
+      campaign.contributeToAppeal(pubkey(funderB), 400);
 
       clock.set(17_100);
       campaign.evaluateAppeal();
 
       expect(campaign.getStatus()).toBe("locked");
       // First round: 150 raised, 10% = 15
-      // Appeal round: 250 raised, 10% = 25
-      // Total: 15 + 25 = 40
+      // Appeal round: 400 raised, 10% = 40
+      // Total: 15 + 40 = 55
       const firstRoundFee = Math.floor(150 * 0.10);
-      const appealRoundFee = Math.floor(250 * 0.10);
+      const appealRoundFee = Math.floor(400 * 0.10);
       expect(campaign.getDaoFeeAmount()).toBe(firstRoundFee + appealRoundFee);
     });
 
@@ -528,15 +530,45 @@ describe("crowdfunding campaign", () => {
       campaign.evaluate();
       campaign.recordOutcome("win");
 
-      // Initiate appeal but fail to meet goal
-      campaign.approveAppeal(pubkey(attorney), 200, 18_000);
-      campaign.contributeToAppeal(pubkey(funderB), 100); // Only 100, need 200
+      // Initiate appeal but fail to meet goal (need 500, only raise 100)
+      campaign.approveAppeal(pubkey(attorney), 500, 18_000, "appellate", "appeal");
+      campaign.contributeToAppeal(pubkey(funderB), 100); // Only 100, need 365 more
 
       clock.set(18_100);
       campaign.evaluateAppeal();
 
       expect(campaign.getStatus()).toBe("failed_refunding");
       expect(campaign.getRefundReason()).toBe("auto_failed");
+    });
+
+    it("skips fundraising when sufficient funds available", () => {
+      const clock = new FakeClock(18_500);
+      const campaign = new Campaign(
+        {
+          id: "case-017b",
+          minRaiseLamports: 100,
+          deadlineUnix: 18_600,
+          refundWindowStartUnix: 18_900,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 500);
+      clock.set(18_700);
+      campaign.evaluate();
+      campaign.recordOutcome("win", 200);
+      campaign.depositCourtAward(pubkey(attorney), 200);
+
+      // Available: 500 - 50 (fee) + 200 (award) = 650
+      // Estimated cost: 100 (less than available)
+      campaign.approveAppeal(pubkey(attorney), 100, 19_000, "appellate", "appeal");
+      
+      // Should skip fundraising and go directly to locked
+      expect(campaign.getStatus()).toBe("locked");
+      expect(campaign.getAppealRounds()[0].fundraisingNeeded).toBe(false);
+      expect(campaign.getAppealRounds()[0].minRaiseLamports).toBe(0);
     });
 
     it("records settlement outcome", () => {

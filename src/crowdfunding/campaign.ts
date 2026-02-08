@@ -7,7 +7,9 @@ import type {
   RefundReason,
   InvoicePayment,
   CampaignOutcome,
-  AppealRound
+  AppealRound,
+  CourtLevel,
+  LitigationPath
 } from "./types.js";
 import { SYSTEM_RECIPIENT_COURT } from "./types.js";
 
@@ -327,19 +329,26 @@ export class Campaign {
   }
 
   /**
-   * Approve an appeal (different thresholds for win vs loss)
+   * Approve an appeal with conditional fundraising
    * Win appeal: requires 1/3 approval
    * Loss appeal: requires 2/3 approval
+   * Only initiates fundraising if insufficient funds available
    */
-  approveAppeal(approver: PublicKeyLike, minRaiseLamports: number, deadlineUnix: number): void {
+  approveAppeal(
+    approver: PublicKeyLike, 
+    estimatedCost: number, 
+    deadlineUnix: number,
+    courtLevel: CourtLevel = "appellate",
+    path: LitigationPath = "appeal"
+  ): void {
     if (this.status !== "won" && this.status !== "lost") {
       throw new CampaignError("Can only approve appeal after win or loss");
     }
     if (!this.config.signers.includes(approver)) {
       throw new CampaignError("Approver is not a multisig signer");
     }
-    if (minRaiseLamports <= 0) {
-      throw new CampaignError("Appeal raise target must be > 0");
+    if (estimatedCost <= 0) {
+      throw new CampaignError("Estimated cost must be > 0");
     }
     if (deadlineUnix <= this.clock.now()) {
       throw new CampaignError("Appeal deadline must be in the future");
@@ -350,16 +359,30 @@ export class Campaign {
     const requiredApprovals = this.status === "won" ? WIN_APPEAL_THRESHOLD : LOSS_APPEAL_THRESHOLD;
     
     if (this.appealApprovals.size >= requiredApprovals) {
+      const availableFunds = this.getAvailableFunds();
+      const needsFundraising = availableFunds < estimatedCost;
+      const minRaiseLamports = needsFundraising ? estimatedCost - availableFunds : 0;
+      
       // Initialize appeal round
       this.appealRounds.push({
         roundNumber: this.currentRound + 1,
+        courtLevel,
+        path,
         minRaiseLamports,
         deadlineUnix,
         totalRaised: 0,
-        previousOutcome: this.outcome!
+        previousOutcome: this.outcome!,
+        fundraisingNeeded: needsFundraising
       });
       this.currentRound++;
-      this.status = "appeal_active";
+      
+      if (needsFundraising) {
+        this.status = "appeal_active";
+      } else {
+        // Sufficient funds available, lock immediately
+        this.status = "locked";
+      }
+      
       this.appealApprovals.clear();
     }
   }
