@@ -9,6 +9,7 @@ import type {
 } from "./types.js";
 
 const APPROVAL_THRESHOLD = 2;
+/** Platform fee percentage (10%) deducted from successful campaigns and allocated to DAO treasury */
 const DAO_FEE_PERCENT = 0.10;
 
 export class Campaign {
