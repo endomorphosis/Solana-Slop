@@ -21,11 +21,68 @@ class FakeClock {
   }
 }
 
-interface ScenarioEvent {
+interface BaseScenarioEvent {
   type: string;
   timestamp: number;
-  [key: string]: any;
+  comment?: string;
+  year?: number;
 }
+
+interface InitialFundingEvent extends BaseScenarioEvent {
+  type: "initial_funding";
+  amount: number;
+}
+
+interface EvaluateEvent extends BaseScenarioEvent {
+  type: "evaluate";
+  expectedStatus?: string;
+}
+
+interface RecordOutcomeEvent extends BaseScenarioEvent {
+  type: "record_outcome";
+  outcome: "settlement" | "win" | "loss";
+  courtLevel?: CourtLevel;
+  judgmentAmount?: number;
+}
+
+interface DepositCourtAwardEvent extends BaseScenarioEvent {
+  type: "deposit_court_award";
+  amount: number;
+}
+
+interface PayJudgmentEvent extends BaseScenarioEvent {
+  type: "pay_judgment";
+  amount: number;
+}
+
+interface ApproveAppealEvent extends BaseScenarioEvent {
+  type: "approve_appeal";
+  approvers: string[];
+  estimatedCost: number;
+  courtLevel?: CourtLevel;
+  path?: LitigationPath;
+  deadline: number;
+}
+
+interface ContributeToAppealEvent extends BaseScenarioEvent {
+  type: "contribute_to_appeal";
+  amount: number;
+}
+
+interface EvaluateAppealEvent extends BaseScenarioEvent {
+  type: "evaluate_appeal";
+  expectedStatus?: string;
+}
+
+type ScenarioEvent = 
+  | InitialFundingEvent
+  | EvaluateEvent
+  | RecordOutcomeEvent
+  | DepositCourtAwardEvent
+  | PayJudgmentEvent
+  | ApproveAppealEvent
+  | ContributeToAppealEvent
+  | EvaluateAppealEvent;
 
 interface Scenario {
   name: string;
@@ -78,65 +135,76 @@ function executeScenario(scenario: Scenario): Campaign {
 
     try {
       switch (event.type) {
-        case "initial_funding":
-          campaign.contribute(pubkey(funderA), event.amount);
+        case "initial_funding": {
+          const e = event as InitialFundingEvent;
+          campaign.contribute(pubkey(funderA), e.amount);
           break;
+        }
 
-        case "evaluate":
+        case "evaluate": {
+          const e = event as EvaluateEvent;
           campaign.evaluate();
-          if (event.expectedStatus) {
-            expect(campaign.getStatus()).toBe(event.expectedStatus);
-          }
-          break;
-
-        case "record_outcome":
-          campaign.recordOutcome(
-            event.outcome,
-            event.judgmentAmount
-          );
-          break;
-
-        case "deposit_court_award":
-          campaign.depositCourtAward(pubkey(attorney), event.amount);
-          break;
-
-        case "pay_judgment":
-          campaign.payJudgment(event.amount);
-          break;
-
-        case "approve_appeal": {
-          const approvers = event.approvers || ["attorney"];
-          const estimatedCost = event.estimatedCost;
-          const courtLevel = event.courtLevel as CourtLevel || "appellate";
-          const path = event.path as LitigationPath || "appeal";
-          const deadline = event.deadline;
-
-          for (const approverName of approvers) {
-            const approverKey = signerMap[approverName];
-            campaign.approveAppeal(approverKey, estimatedCost, deadline, courtLevel, path);
+          if (e.expectedStatus) {
+            expect(campaign.getStatus()).toBe(e.expectedStatus);
           }
           break;
         }
 
-        case "contribute_to_appeal":
-          campaign.contributeToAppeal(pubkey(funderA), event.amount);
+        case "record_outcome": {
+          const e = event as RecordOutcomeEvent;
+          campaign.recordOutcome(e.outcome, e.judgmentAmount);
           break;
+        }
 
-        case "evaluate_appeal":
-          campaign.evaluateAppeal();
-          if (event.expectedStatus) {
-            expect(campaign.getStatus()).toBe(event.expectedStatus);
+        case "deposit_court_award": {
+          const e = event as DepositCourtAwardEvent;
+          campaign.depositCourtAward(pubkey(attorney), e.amount);
+          break;
+        }
+
+        case "pay_judgment": {
+          const e = event as PayJudgmentEvent;
+          campaign.payJudgment(e.amount);
+          break;
+        }
+
+        case "approve_appeal": {
+          const e = event as ApproveAppealEvent;
+          const approvers = e.approvers || ["attorney"];
+          const courtLevel = e.courtLevel || "appellate";
+          const path = e.path || "appeal";
+
+          for (const approverName of approvers) {
+            const approverKey = signerMap[approverName];
+            campaign.approveAppeal(approverKey, e.estimatedCost, e.deadline, courtLevel, path);
           }
           break;
+        }
+
+        case "contribute_to_appeal": {
+          const e = event as ContributeToAppealEvent;
+          campaign.contributeToAppeal(pubkey(funderA), e.amount);
+          break;
+        }
+
+        case "evaluate_appeal": {
+          const e = event as EvaluateAppealEvent;
+          campaign.evaluateAppeal();
+          if (e.expectedStatus) {
+            expect(campaign.getStatus()).toBe(e.expectedStatus);
+          }
+          break;
+        }
 
         default:
-          console.warn(`Unknown event type: ${event.type}`);
+          console.warn(`Unknown event type: ${(event as BaseScenarioEvent).type}`);
       }
-    } catch (error: any) {
-      // Log error with context for debugging
-      console.error(`Error executing event ${event.type} at timestamp ${event.timestamp}:`, error.message);
-      if (event.comment) {
-        console.error(`Event comment: ${event.comment}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`Error executing event ${event.type} at timestamp ${event.timestamp}:`, error.message);
+        if (event.comment) {
+          console.error(`Event comment: ${event.comment}`);
+        }
       }
       throw error;
     }
