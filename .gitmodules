@@ -1,0 +1,3 @@
+[submodule "packages/complaint-generator"]
+	path = packages/complaint-generator
+	url = https://github.com/endomorphosis/complaint-generator.git

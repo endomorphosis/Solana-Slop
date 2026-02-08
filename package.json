@@ -15,10 +15,21 @@
   },
   "dependencies": {
     "@solana/web3.js": "^1.98.4",
-    "dotenv": "^16.4.5"
+    "dotenv": "^16.4.5",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1",
+    "ipfs-http-client": "^60.0.1",
+    "@ucanto/client": "^9.0.1",
+    "@ucanto/principal": "^9.0.1",
+    "@ucanto/server": "^9.0.1",
+    "@ucanto/transport": "^9.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.5",
+    "@types/uuid": "^9.0.7",
     "ts-node": "^10.9.2",
     "typescript": "^5.7.3",
     "vitest": "^2.1.8"
