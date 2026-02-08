@@ -420,10 +420,11 @@ export class AdminDashboard {
       }
     }
 
-    // Calculate average contribution
+    // Calculate average contribution (only for campaigns with actual contributions)
     let averageContribution: number | undefined;
-    if (userCampaigns.length > 0) {
-      averageContribution = totalContributed / userCampaigns.length;
+    const campaignsWithContributions = campaignContributions.size;
+    if (campaignsWithContributions > 0 && totalContributed > 0) {
+      averageContribution = totalContributed / campaignsWithContributions;
     }
 
     return {

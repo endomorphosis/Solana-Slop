@@ -573,7 +573,43 @@ describe("AdminDashboard", () => {
       const profile = dashboard.getUserProfile("user1");
 
       expect(profile).toBeDefined();
-      expect(profile?.analytics.averageContribution).toBe(800); // Total 800 / 1 campaign
+      // Total 800 contributed to 1 campaign = 800 average
+      expect(profile?.analytics.averageContribution).toBe(800);
+    });
+
+    it("should calculate average contribution across multiple campaigns", () => {
+      const config2 = { ...config, id: "campaign2" };
+      const campaign2 = new Campaign(config2, clock);
+      dashboard.registerCampaign(campaign2, "campaign2");
+      dashboard.registerAccount("user1", "user", "User One", "user1@example.com");
+
+      // Contribute to campaign1
+      dashboard.recordTransaction({
+        id: "tx1",
+        timestamp: 1000,
+        type: "contribution",
+        amount: 600,
+        from: "user1",
+        to: "campaign1",
+        campaignId: "campaign1"
+      });
+
+      // Contribute to campaign2
+      dashboard.recordTransaction({
+        id: "tx2",
+        timestamp: 1100,
+        type: "contribution",
+        amount: 400,
+        from: "user1",
+        to: "campaign2",
+        campaignId: "campaign2"
+      });
+
+      const profile = dashboard.getUserProfile("user1");
+
+      expect(profile).toBeDefined();
+      // Total 1000 contributed across 2 campaigns = 500 average
+      expect(profile?.analytics.averageContribution).toBe(500);
     });
   });
 
