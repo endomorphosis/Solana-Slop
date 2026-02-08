@@ -9,7 +9,10 @@ import type {
   TransactionRecord,
   DashboardStats,
   UserProfile,
-  UserAnalytics
+  UserAnalytics,
+  LitigationCase,
+  LitigationStatus,
+  CaseManagementStats
 } from "./types.js";
 
 /**
@@ -526,5 +529,141 @@ export class AdminDashboard {
       acc.email.toLowerCase().includes(lowerQuery) ||
       acc.publicKey.toLowerCase().includes(lowerQuery)
     );
+  }
+
+  /**
+   * Get all cases in active litigation (campaigns completed but still in legal proceedings)
+   */
+  getActiveLitigationCases(): LitigationCase[] {
+    const cases: LitigationCase[] = [];
+
+    for (const [campaignId, campaign] of this.campaigns.entries()) {
+      const status = campaign.getStatus();
+      const outcome = campaign.getOutcome();
+      const appealRounds = campaign.getAppealRounds();
+      
+      // Check if campaign has completed fundraising and has litigation activity
+      const hasCompletedFundraising = status === "locked" || status === "won" || 
+                                       status === "lost" || status === "settled" || 
+                                       status === "appeal_active";
+      const hasLitigationActivity = outcome !== null || appealRounds.length > 0;
+
+      if (hasCompletedFundraising && hasLitigationActivity) {
+        const litigationCase = this.buildLitigationCase(campaignId, campaign);
+        cases.push(litigationCase);
+      }
+    }
+
+    return cases;
+  }
+
+  /**
+   * Get detailed case information for a specific campaign
+   */
+  getCaseDetails(campaignId: string): LitigationCase | undefined {
+    const campaign = this.campaigns.get(campaignId);
+    if (!campaign) {
+      return undefined;
+    }
+
+    const outcome = campaign.getOutcome();
+    const appealRounds = campaign.getAppealRounds();
+    
+    // Only return case details if there's litigation activity
+    if (outcome === null && appealRounds.length === 0) {
+      return undefined;
+    }
+
+    return this.buildLitigationCase(campaignId, campaign);
+  }
+
+  /**
+   * List cases by court level
+   */
+  listCasesByCourtLevel(courtLevel: string): LitigationCase[] {
+    const allCases = this.getActiveLitigationCases();
+    return allCases.filter(c => c.currentCourtLevel === courtLevel);
+  }
+
+  /**
+   * Get case management statistics
+   */
+  getCaseManagementStats(): CaseManagementStats {
+    const allCases = this.getActiveLitigationCases();
+    
+    const stats: CaseManagementStats = {
+      totalCases: allCases.length,
+      casesInTrial: allCases.filter(c => c.litigationStatus === "in_trial").length,
+      casesInAppeal: allCases.filter(c => c.litigationStatus === "in_appeal").length,
+      casesAwaitingDecision: allCases.filter(c => c.litigationStatus === "awaiting_decision").length,
+      casesByCourtLevel: {
+        district: allCases.filter(c => c.currentCourtLevel === "district").length,
+        appellate: allCases.filter(c => c.currentCourtLevel === "appellate").length,
+        state_supreme: allCases.filter(c => c.currentCourtLevel === "state_supreme").length,
+        us_supreme: allCases.filter(c => c.currentCourtLevel === "us_supreme").length
+      }
+    };
+
+    return stats;
+  }
+
+  /**
+   * Build a LitigationCase object from a campaign
+   */
+  private buildLitigationCase(campaignId: string, campaign: Campaign): LitigationCase {
+    const status = campaign.getStatus();
+    const outcome = campaign.getOutcome();
+    const appealRounds = campaign.getAppealRounds();
+    const currentRound = campaign.getCurrentRound();
+    
+    // Determine litigation status
+    let litigationStatus: LitigationStatus;
+    if (status === "appeal_active") {
+      litigationStatus = "awaiting_funding";
+    } else if (appealRounds.length > 0) {
+      const lastRound = appealRounds[appealRounds.length - 1];
+      if (lastRound.path === "final") {
+        litigationStatus = "completed";
+      } else if (lastRound.path === "appeal") {
+        litigationStatus = "in_appeal";
+      } else {
+        litigationStatus = "awaiting_decision";
+      }
+    } else if (outcome !== null) {
+      litigationStatus = "awaiting_decision";
+    } else {
+      litigationStatus = "in_trial";
+    }
+
+    // Determine current court level and path
+    let currentCourtLevel: import("../crowdfunding/types.js").CourtLevel = "district";
+    let currentPath: import("../crowdfunding/types.js").LitigationPath = "appeal";
+    
+    if (appealRounds.length > 0) {
+      const lastRound = appealRounds[appealRounds.length - 1];
+      currentCourtLevel = lastRound.courtLevel;
+      currentPath = lastRound.path;
+    }
+
+    // Get proposal for client/attorney info
+    const proposal = Array.from(this.proposals.values()).find(p => p.campaignId === campaignId);
+    
+    return {
+      campaignId,
+      client: proposal?.client || "",
+      attorney: proposal?.attorney || "",
+      status,
+      litigationStatus,
+      currentOutcome: outcome,
+      currentCourtLevel,
+      currentPath,
+      currentRound,
+      appealRounds,
+      totalRaised: campaign.getTotalRaised(),
+      availableFunds: campaign.getAvailableFunds(),
+      judgmentAmount: campaign.getJudgmentAmount(),
+      description: proposal?.description,
+      lastUpdated: this.clock.now()
+    };
   }
 }

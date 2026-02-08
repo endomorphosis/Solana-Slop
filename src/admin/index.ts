@@ -8,5 +8,8 @@ export type {
   TransactionRecord,
   DashboardStats,
   UserProfile,
-  UserAnalytics
+  UserAnalytics,
+  LitigationCase,
+  LitigationStatus,
+  CaseManagementStats
 } from "./types.js";

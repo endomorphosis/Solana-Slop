@@ -1,4 +1,4 @@
-import type { PublicKeyLike, CampaignStatus, CampaignOutcome } from "../crowdfunding/types.js";
+import type { PublicKeyLike, CampaignStatus, CampaignOutcome, CourtLevel, LitigationPath, AppealRound } from "../crowdfunding/types.js";
 
 /**
  * Account types in the system
@@ -203,4 +203,68 @@ export interface UserAnalytics {
     lastWeek: number;
     lastMonth: number;
   };
+}
+
+/**
+ * Litigation case status
+ */
+export type LitigationStatus = "in_trial" | "in_appeal" | "awaiting_decision" | "awaiting_funding" | "completed";
+
+/**
+ * Detailed litigation case information for case management
+ */
+export interface LitigationCase {
+  /** Campaign ID */
+  campaignId: string;
+  /** Client public key */
+  client: PublicKeyLike;
+  /** Attorney public key */
+  attorney: PublicKeyLike;
+  /** Current campaign status */
+  status: CampaignStatus;
+  /** Current litigation status */
+  litigationStatus: LitigationStatus;
+  /** Current case outcome (if recorded) */
+  currentOutcome: CampaignOutcome | null;
+  /** Current court level */
+  currentCourtLevel: CourtLevel;
+  /** Current litigation path */
+  currentPath: LitigationPath;
+  /** Current round number */
+  currentRound: number;
+  /** All appeal rounds */
+  appealRounds: AppealRound[];
+  /** Total amount raised */
+  totalRaised: number;
+  /** Available funds */
+  availableFunds: number;
+  /** Judgment amount (if any) */
+  judgmentAmount: number;
+  /** Case description */
+  description?: string;
+  /** Last updated timestamp */
+  lastUpdated: number;
+}
+
+/**
+ * Case management statistics
+ */
+export interface CaseManagementStats {
+  /** Total cases in litigation */
+  totalCases: number;
+  /** Cases in trial */
+  casesInTrial: number;
+  /** Cases in appeal */
+  casesInAppeal: number;
+  /** Cases awaiting decision */
+  casesAwaitingDecision: number;
+  /** Cases by court level */
+  casesByCourtLevel: {
+    district: number;
+    appellate: number;
+    state_supreme: number;
+    us_supreme: number;
+  };
+  /** Average case duration (in days) */
+  averageCaseDuration?: number;
 }

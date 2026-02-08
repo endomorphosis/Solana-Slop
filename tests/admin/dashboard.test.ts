@@ -734,4 +734,198 @@ describe("AdminDashboard", () => {
       expect(results).toHaveLength(0);
     });
   });
+
+  describe("Case Management", () => {
+    let config: CampaignConfig;
+    let campaign: Campaign;
+
+    beforeEach(() => {
+      config = {
+        id: "campaign1",
+        minRaiseLamports: 1000,
+        deadlineUnix: 2000,
+        refundWindowStartUnix: 3000,
+        signers: ["attorney1", "platform1", "client1"],
+        daoTreasury: "dao_treasury"
+      };
+      campaign = new Campaign(config, clock);
+      dashboard.registerCampaign(campaign, "campaign1");
+      
+      // Register accounts
+      dashboard.registerAccount("attorney1", "attorney", "Attorney One", "attorney1@example.com");
+      dashboard.registerAccount("client1", "client", "Client One", "client1@example.com");
+    });
+
+    it("should identify cases in active litigation", () => {
+      // Submit proposal
+      dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Patent case");
+
+      // Make campaign successful
+      campaign.contribute("user1", 1000);
+      clock.setTime(2001);
+      campaign.evaluate();
+
+      // Record outcome (case enters litigation)
+      campaign.recordOutcome("win", 50000);
+
+      const cases = dashboard.getActiveLitigationCases();
+
+      expect(cases).toHaveLength(1);
+      expect(cases[0].campaignId).toBe("campaign1");
+      expect(cases[0].litigationStatus).toBe("awaiting_decision");
+      expect(cases[0].currentOutcome).toBe("win");
+    });
+
+    it("should not include campaigns without litigation activity", () => {
+      // Campaign is locked but no outcome recorded yet
+      campaign.contribute("user1", 1000);
+      clock.setTime(2001);
+      campaign.evaluate();
+
+      const cases = dashboard.getActiveLitigationCases();
+
+      expect(cases).toHaveLength(0);
+    });
+
+    it("should track appeal rounds in litigation cases", () => {
+      dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Case");
+
+      // Make campaign successful and record outcome
+      campaign.contribute("user1", 1000);
+      clock.setTime(2001);
+      campaign.evaluate();
+      campaign.recordOutcome("win", 50000);
+      campaign.depositCourtAward("attorney1", 50000);
+
+      // Approve appeal
+      campaign.approveAppeal("attorney1", 30000, 3000, "appellate", "appeal");
+
+      const cases = dashboard.getActiveLitigationCases();
+
+      expect(cases).toHaveLength(1);
+      expect(cases[0].currentRound).toBe(2);
+      expect(cases[0].appealRounds).toHaveLength(1);
+      expect(cases[0].currentCourtLevel).toBe("appellate");
+      expect(cases[0].currentPath).toBe("appeal");
+    });
+
+    it("should get detailed case information", () => {
+      dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Patent case");
+
+      campaign.contribute("user1", 1000);
+      clock.setTime(2001);
+      campaign.evaluate();
+      campaign.recordOutcome("loss", 25000);
+
+      const caseDetails = dashboard.getCaseDetails("campaign1");
+
+      expect(caseDetails).toBeDefined();
+      expect(caseDetails?.campaignId).toBe("campaign1");
+      expect(caseDetails?.client).toBe("client1");
+      expect(caseDetails?.attorney).toBe("attorney1");
+      expect(caseDetails?.currentOutcome).toBe("loss");
+      expect(caseDetails?.judgmentAmount).toBe(25000);
+      expect(caseDetails?.description).toBe("Patent case");
+    });
+
+    it("should return undefined for non-existent cases", () => {
+      const caseDetails = dashboard.getCaseDetails("nonexistent");
+      expect(caseDetails).toBeUndefined();
+    });
+
+    it("should filter cases by court level", () => {
+      // Reset clock to start
+      clock.setTime(1000);
+      
+      // Create multiple campaigns at different court levels
+      const config2 = { ...config, id: "campaign2" };
+      const campaign2 = new Campaign(config2, clock);
+      dashboard.registerCampaign(campaign2, "campaign2");
+      
+      dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Case 1");
+      dashboard.submitProposal("campaign2", "client1", "attorney1", 1000, 2000, "Case 2");
+
+      // Campaign 1: District court
+      campaign.contribute("user1", 1000);
+      
+      // Campaign 2: Before deadline
+      campaign2.contribute("user1", 1000);
+      
+      // Now advance time past deadline
+      clock.setTime(2001);
+      campaign.evaluate();
+      campaign.recordOutcome("win");
+
+      // Campaign 2: Appellate court
+      campaign2.evaluate();
+      campaign2.recordOutcome("win", 30000);
+      campaign2.depositCourtAward("attorney1", 30000);
+      campaign2.approveAppeal("attorney1", 20000, 3000, "appellate", "appeal");
+
+      const districtCases = dashboard.listCasesByCourtLevel("district");
+      const appellateCases = dashboard.listCasesByCourtLevel("appellate");
+
+      expect(districtCases).toHaveLength(1);
+      expect(districtCases[0].campaignId).toBe("campaign1");
+      expect(appellateCases).toHaveLength(1);
+      expect(appellateCases[0].campaignId).toBe("campaign2");
+    });
+
+    it("should calculate case management statistics", () => {
+      dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Case 1");
+
+      campaign.contribute("user1", 1000);
+      clock.setTime(2001);
+      campaign.evaluate();
+      campaign.recordOutcome("win");
+
+      const stats = dashboard.getCaseManagementStats();
+
+      expect(stats.totalCases).toBe(1);
+      expect(stats.casesAwaitingDecision).toBeGreaterThanOrEqual(0);
+      expect(stats.casesByCourtLevel.district).toBeGreaterThanOrEqual(0);
+    });
+
+    it("should identify awaiting funding status for appeal_active campaigns", () => {
+      dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Case");
+
+      campaign.contribute("user1", 1000);
+      clock.setTime(2001);
+      campaign.evaluate();
+      
+      // After 10% DAO fee, available funds = 900
+      // Record loss with smaller judgment
+      campaign.recordOutcome("loss", 500);
+      campaign.payJudgment(500);
+
+      // Approve appeal that requires fundraising (2/3 for loss)
+      campaign.approveAppeal("attorney1", 80000, 3000, "appellate", "appeal");
+      campaign.approveAppeal("platform1", 80000, 3000, "appellate", "appeal");
+
+      const cases = dashboard.getActiveLitigationCases();
+
+      expect(cases).toHaveLength(1);
+      expect(cases[0].litigationStatus).toBe("awaiting_funding");
+      expect(cases[0].status).toBe("appeal_active");
+    });
+
+    it("should mark cases with final path as completed", () => {
+      dashboard.submitProposal("campaign1", "client1", "attorney1", 1000, 2000, "Case");
+
+      campaign.contribute("user1", 1000);
+      clock.setTime(2001);
+      campaign.evaluate();
+      campaign.recordOutcome("win", 100000);
+      campaign.depositCourtAward("attorney1", 100000);
+
+      // Approve appeal with final path
+      campaign.approveAppeal("attorney1", 20000, 3000, "us_supreme", "final");
+
+      const cases = dashboard.getActiveLitigationCases();
+
+      expect(cases).toHaveLength(1);
+      expect(cases[0].litigationStatus).toBe("completed");
+      expect(cases[0].currentPath).toBe("final");
+    });
+  });
 });
