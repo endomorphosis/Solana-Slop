@@ -4,10 +4,12 @@ import type {
   CampaignStatus,
   Clock,
   PublicKeyLike,
-  RefundReason
+  RefundReason,
+  InvoicePayment
 } from "./types.js";
 
 const APPROVAL_THRESHOLD = 2;
+const DAO_FEE_PERCENT = 0.10;
 
 export class Campaign {
   private readonly config: CampaignConfig;
@@ -18,6 +20,10 @@ export class Campaign {
   private readonly approvals = new Set<PublicKeyLike>();
   private refundReason: RefundReason | null = null;
   private refundOpenedAt: number | null = null;
+  private daoFeeAmount = 0;
+  private courtFeesDeposited = 0;
+  private readonly invoicePayments: InvoicePayment[] = [];
+  private readonly pendingInvoiceApprovals = new Map<string, Set<PublicKeyLike>>();
 
   constructor(config: CampaignConfig, clock: Clock) {
     if (config.signers.length !== 3) {
@@ -80,6 +86,8 @@ export class Campaign {
         this.status = "failed_refunding";
         return;
       }
+      // Successful raise: deduct 10% DAO fee
+      this.daoFeeAmount = Math.floor(this.getTotalRaised() * DAO_FEE_PERCENT);
       this.status = "locked";
     }
   }
@@ -122,5 +130,79 @@ export class Campaign {
 
   getRefundOpenedAt(): number | null {
     return this.refundOpenedAt;
+  }
+
+  getDaoFeeAmount(): number {
+    return this.daoFeeAmount;
+  }
+
+  getCourtFeesDeposited(): number {
+    return this.courtFeesDeposited;
+  }
+
+  getInvoicePayments(): InvoicePayment[] {
+    return [...this.invoicePayments];
+  }
+
+  getAvailableFunds(): number {
+    const totalRaised = this.getTotalRaised();
+    const totalRefunded = Array.from(this.refunded).reduce(
+      (sum, funder) => sum + (this.contributions.get(funder) ?? 0), 
+      0
+    );
+    const totalInvoicePayments = this.invoicePayments.reduce(
+      (sum, payment) => sum + payment.amount, 
+      0
+    );
+    return totalRaised - this.daoFeeAmount - totalRefunded + this.courtFeesDeposited - totalInvoicePayments;
+  }
+
+  depositCourtFees(depositor: PublicKeyLike, amount: number): void {
+    if (this.status !== "locked") {
+      throw new CampaignError("Can only deposit court fees to locked campaigns");
+    }
+    // Only attorney (first signer) can deposit court fees
+    if (depositor !== this.config.signers[0]) {
+      throw new CampaignError("Only attorney can deposit court fees");
+    }
+    if (amount <= 0) {
+      throw new CampaignError("Court fee amount must be > 0");
+    }
+    this.courtFeesDeposited += amount;
+  }
+
+  approveInvoicePayment(approver: PublicKeyLike, invoiceId: string, amount: number, recipient: PublicKeyLike): void {
+    if (this.status !== "locked") {
+      throw new CampaignError("Can only approve invoice payments for locked campaigns");
+    }
+    if (!this.config.signers.includes(approver)) {
+      throw new CampaignError("Approver is not a multisig signer");
+    }
+    if (amount <= 0) {
+      throw new CampaignError("Invoice amount must be > 0");
+    }
+    if (this.getAvailableFunds() < amount) {
+      throw new CampaignError("Insufficient funds for invoice payment");
+    }
+
+    if (!this.pendingInvoiceApprovals.has(invoiceId)) {
+      this.pendingInvoiceApprovals.set(invoiceId, new Set());
+    }
+    const approvals = this.pendingInvoiceApprovals.get(invoiceId)!;
+    approvals.add(approver);
+
+    if (approvals.size >= APPROVAL_THRESHOLD) {
+      this.invoicePayments.push({
+        invoiceId,
+        amount,
+        recipient,
+        approvers: Array.from(approvals)
+      });
+      this.pendingInvoiceApprovals.delete(invoiceId);
+    }
+  }
+
+  getInvoiceApprovals(invoiceId: string): PublicKeyLike[] {
+    return Array.from(this.pendingInvoiceApprovals.get(invoiceId) ?? []);
   }
 }

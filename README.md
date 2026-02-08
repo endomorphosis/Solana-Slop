@@ -33,6 +33,18 @@ The repo includes a domain-level test suite that models:
 - Funds moving into a 3-of-3 multisig context (attorney, platform, client)
 - Auto-refunds when the minimum raise is not met by the deadline
 - 2-of-3 multisig approvals to refund after a time window
+- **10% DAO treasury fee** deducted automatically on successful fundraising campaigns
+- **Attorney court fee deposits**: Attorney can unilaterally deposit court-awarded fees into the campaign
+- **Invoice payment approvals**: 2-of-3 multisig signers can approve payments to attorney for services rendered
+
+#### DAO Treasury Fee
+Upon a successful raise (meeting the minimum goal by the deadline), a 10% fee is automatically deducted and allocated to the DAO treasury for platform maintenance and administration. This ensures sustainable operation of the crowdfunding platform.
+
+#### Court Fee Deposits
+When a court awards fees to the campaign, the attorney (first multisig signer) can unilaterally deposit these fees into the campaign wallet. This allows the campaign to receive additional funds from legal proceedings without requiring multi-party approval.
+
+#### Invoice Payment System
+When the attorney provides an invoice for services rendered, any 2-of-3 multisig signers (attorney, platform, client) can approve payment from the campaign funds to the attorney's wallet. This provides a transparent and secure mechanism for paying for legal services while requiring consensus from the multisig participants.
 
 Run the crowdfunding unit tests with:
 ```bash
