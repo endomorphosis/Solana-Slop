@@ -5,6 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:integration": "RUN_INTEGRATION=1 vitest run",
     "ping": "node --loader ts-node/esm src/ping.ts",
     "balance": "node --loader ts-node/esm src/balance.ts",
     "gen-keypair": "node --loader ts-node/esm src/gen-keypair.ts",
@@ -17,6 +20,7 @@
   "devDependencies": {
     "@types/node": "^22.10.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.7.3"
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
   }
 }

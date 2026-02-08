@@ -11,6 +11,34 @@ npm install
 cp .env.example .env
 ```
 
+## Tests (TDD)
+Run unit tests:
+```bash
+npm test
+```
+
+Watch mode during development:
+```bash
+npm run test:watch
+```
+
+Run integration tests (hits testnet RPC):
+```bash
+npm run test:integration
+```
+
+### Crowdfunding TDD scaffolding
+The repo includes a domain-level test suite that models:
+- Community funding into a campaign
+- Funds moving into a 3-of-3 multisig context (attorney, platform, client)
+- Auto-refunds when the minimum raise is not met by the deadline
+- 2-of-3 multisig approvals to refund after a time window
+
+Run the crowdfunding unit tests with:
+```bash
+npm test
+```
+
 ## Ping Solana testnet
 ```bash
 npm run ping
