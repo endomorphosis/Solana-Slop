@@ -174,8 +174,9 @@ The platform includes a comprehensive admin dashboard for managing campaigns, pr
 - **Proposal Review & Approval**: Review and approve/reject crowdfunding proposals submitted by clients
 - **Campaign Oversight**: Monitor all campaigns, their status, funding progress, and workflow history
 - **Account Management**: Manage user, client, and attorney accounts
+- **User Profile Analysis**: Detailed user profiles with cross-linked data across campaigns, proposals, and transactions
 - **Transaction Tracking**: View complete transaction history including contributions, refunds, court awards, and invoice payments
-- **Dashboard Statistics**: Real-time overview of platform metrics
+- **Dashboard Statistics**: Real-time overview of platform metrics and user analytics
 
 ### API Usage
 
@@ -232,6 +233,22 @@ console.log(`Pending proposals: ${stats.pendingProposals}`);
 const pendingProposals = dashboard.listProposals("pending");
 const activeCampaigns = dashboard.listCampaignsByStatus("active");
 const walletTxs = dashboard.getWalletTransactions("user1");
+
+// Get detailed user profile with cross-linked data
+const profile = dashboard.getUserProfile("attorney1");
+console.log(`Campaigns: ${profile.campaigns.join(", ")}`);
+console.log(`Proposals: ${profile.proposals.join(", ")}`);
+console.log(`Total Received: ${profile.analytics.totalReceived}`);
+console.log(`Success Rate: ${profile.analytics.successRate}`);
+
+// Get user analytics
+const analytics = dashboard.getUserAnalytics();
+console.log(`Users: ${analytics.userTypeDistribution.users}`);
+console.log(`Top Contributor: ${analytics.topContributors[0].name}`);
+console.log(`Top Attorney: ${analytics.topAttorneys[0].name}`);
+
+// Search users by type
+const attorneys = dashboard.searchUsers("smith", "attorney");
 ```
 
 ### Web Interface
@@ -250,10 +267,17 @@ http-server
 
 The web interface provides:
 - **Overview tab**: Platform statistics and recent activity
-- **Proposals tab**: Review and manage proposal submissions
+- **Proposals tab**: Review and manage proposal submissions with filtering
 - **Campaigns tab**: Monitor all campaigns and their status
-- **Accounts tab**: Manage user, client, and attorney accounts
-- **Transactions tab**: View complete transaction history
+- **Accounts tab**: Manage user, client, and attorney accounts with filtering
+- **User Profiles tab**: Detailed profile analysis with cross-linking
+  - Filter by investors, clients, or attorneys
+  - View user analytics (distribution, activity trends)
+  - Top contributors leaderboard
+  - Top attorneys by cases and success rate
+  - Each profile shows campaigns participated, proposals managed, transaction history, and analytics
+  - Cross-references link to other admin sections (campaigns, proposals, transactions)
+- **Transactions tab**: View complete transaction history by wallet or campaign
 
 *Note: The web interface is a frontend demo. In production, connect it to the AdminDashboard API via a backend service.*
 
