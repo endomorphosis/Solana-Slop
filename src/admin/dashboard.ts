@@ -94,7 +94,7 @@ export class AdminDashboard {
     description: string
   ): ProposalReview {
     if (this.proposals.has(campaignId)) {
-      throw new Error("Proposal already exists for this campaign");
+      throw new Error(`Proposal already exists for campaign: ${campaignId}`);
     }
 
     const proposal: ProposalReview = {

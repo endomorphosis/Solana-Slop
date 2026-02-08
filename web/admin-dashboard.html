@@ -321,11 +321,11 @@
         </header>
 
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="switchTab('overview')">📊 Overview</button>
-            <button class="nav-tab" onclick="switchTab('proposals')">📋 Proposals</button>
-            <button class="nav-tab" onclick="switchTab('campaigns')">💰 Campaigns</button>
-            <button class="nav-tab" onclick="switchTab('accounts')">👥 Accounts</button>
-            <button class="nav-tab" onclick="switchTab('transactions')">💸 Transactions</button>
+            <button class="nav-tab active" onclick="switchTab('overview', event)">📊 Overview</button>
+            <button class="nav-tab" onclick="switchTab('proposals', event)">📋 Proposals</button>
+            <button class="nav-tab" onclick="switchTab('campaigns', event)">💰 Campaigns</button>
+            <button class="nav-tab" onclick="switchTab('accounts', event)">👥 Accounts</button>
+            <button class="nav-tab" onclick="switchTab('transactions', event)">💸 Transactions</button>
         </div>
 
         <!-- Overview Tab -->
@@ -368,12 +368,12 @@
             <div class="card">
                 <h2>Crowdfunding Proposals</h2>
                 <div class="filter-group">
-                    <button class="filter-btn active" onclick="filterProposals('all')">All</button>
-                    <button class="filter-btn" onclick="filterProposals('pending')">Pending</button>
-                    <button class="filter-btn" onclick="filterProposals('approved')">Approved</button>
-                    <button class="filter-btn" onclick="filterProposals('rejected')">Rejected</button>
+                    <button class="filter-btn active" onclick="filterProposals('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterProposals('pending', event)">Pending</button>
+                    <button class="filter-btn" onclick="filterProposals('approved', event)">Approved</button>
+                    <button class="filter-btn" onclick="filterProposals('rejected', event)">Rejected</button>
                 </div>
-                <input type="text" class="search-bar" placeholder="Search proposals by campaign ID, client, or attorney..." id="proposal-search">
+                <input type="text" class="search-bar" placeholder="Search proposals by campaign ID, client, or attorney... (demo only)" id="proposal-search">
                 <table>
                     <thead>
                         <tr>
@@ -402,14 +402,14 @@
             <div class="card">
                 <h2>Campaign Management</h2>
                 <div class="filter-group">
-                    <button class="filter-btn active" onclick="filterCampaigns('all')">All</button>
-                    <button class="filter-btn" onclick="filterCampaigns('active')">Active</button>
-                    <button class="filter-btn" onclick="filterCampaigns('locked')">Locked</button>
-                    <button class="filter-btn" onclick="filterCampaigns('won')">Won</button>
-                    <button class="filter-btn" onclick="filterCampaigns('lost')">Lost</button>
-                    <button class="filter-btn" onclick="filterCampaigns('settled')">Settled</button>
+                    <button class="filter-btn active" onclick="filterCampaigns('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterCampaigns('active', event)">Active</button>
+                    <button class="filter-btn" onclick="filterCampaigns('locked', event)">Locked</button>
+                    <button class="filter-btn" onclick="filterCampaigns('won', event)">Won</button>
+                    <button class="filter-btn" onclick="filterCampaigns('lost', event)">Lost</button>
+                    <button class="filter-btn" onclick="filterCampaigns('settled', event)">Settled</button>
                 </div>
-                <input type="text" class="search-bar" placeholder="Search campaigns by ID..." id="campaign-search">
+                <input type="text" class="search-bar" placeholder="Search campaigns by ID... (demo only)" id="campaign-search">
                 <table>
                     <thead>
                         <tr>
@@ -438,12 +438,12 @@
             <div class="card">
                 <h2>Account Management</h2>
                 <div class="filter-group">
-                    <button class="filter-btn active" onclick="filterAccounts('all')">All</button>
-                    <button class="filter-btn" onclick="filterAccounts('user')">Users</button>
-                    <button class="filter-btn" onclick="filterAccounts('client')">Clients</button>
-                    <button class="filter-btn" onclick="filterAccounts('attorney')">Attorneys</button>
+                    <button class="filter-btn active" onclick="filterAccounts('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterAccounts('user', event)">Users</button>
+                    <button class="filter-btn" onclick="filterAccounts('client', event)">Clients</button>
+                    <button class="filter-btn" onclick="filterAccounts('attorney', event)">Attorneys</button>
                 </div>
-                <input type="text" class="search-bar" placeholder="Search accounts by name, email, or wallet..." id="account-search">
+                <input type="text" class="search-bar" placeholder="Search accounts by name, email, or wallet... (demo only)" id="account-search">
                 <table>
                     <thead>
                         <tr>
@@ -472,13 +472,13 @@
             <div class="card">
                 <h2>Transaction History</h2>
                 <div class="filter-group">
-                    <button class="filter-btn active" onclick="filterTransactions('all')">All</button>
-                    <button class="filter-btn" onclick="filterTransactions('contribution')">Contributions</button>
-                    <button class="filter-btn" onclick="filterTransactions('refund')">Refunds</button>
-                    <button class="filter-btn" onclick="filterTransactions('invoice_payment')">Invoices</button>
-                    <button class="filter-btn" onclick="filterTransactions('court_award')">Court Awards</button>
+                    <button class="filter-btn active" onclick="filterTransactions('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterTransactions('contribution', event)">Contributions</button>
+                    <button class="filter-btn" onclick="filterTransactions('refund', event)">Refunds</button>
+                    <button class="filter-btn" onclick="filterTransactions('invoice_payment', event)">Invoices</button>
+                    <button class="filter-btn" onclick="filterTransactions('court_award', event)">Court Awards</button>
                 </div>
-                <input type="text" class="search-bar" placeholder="Search transactions by ID, wallet, or campaign..." id="transaction-search">
+                <input type="text" class="search-bar" placeholder="Search transactions by ID, wallet, or campaign... (demo only)" id="transaction-search">
                 <table>
                     <thead>
                         <tr>
@@ -505,7 +505,7 @@
 
     <script>
         // Tab switching functionality
-        function switchTab(tabName) {
+        function switchTab(tabName, event) {
             // Hide all tab contents
             const contents = document.querySelectorAll('.tab-content');
             contents.forEach(content => content.classList.remove('active'));
@@ -522,7 +522,7 @@
         }
 
         // Filter functionality for proposals
-        function filterProposals(status) {
+        function filterProposals(status, event) {
             const buttons = document.querySelectorAll('#proposals .filter-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
@@ -532,7 +532,7 @@
         }
 
         // Filter functionality for campaigns
-        function filterCampaigns(status) {
+        function filterCampaigns(status, event) {
             const buttons = document.querySelectorAll('#campaigns .filter-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
@@ -542,7 +542,7 @@
         }
 
         // Filter functionality for accounts
-        function filterAccounts(type) {
+        function filterAccounts(type, event) {
             const buttons = document.querySelectorAll('#accounts .filter-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
@@ -552,7 +552,7 @@
         }
 
         // Filter functionality for transactions
-        function filterTransactions(type) {
+        function filterTransactions(type, event) {
             const buttons = document.querySelectorAll('#transactions .filter-btn');
             buttons.forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
