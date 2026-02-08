@@ -362,7 +362,7 @@ A comprehensive client sign-up portal with KYC verification, encryption, and com
 - Clients create an account with username, email, and password
 - Password must be at least 8 characters
 - Optional: Connect Solana wallet address
-- All credentials are encrypted with bcrypt
+- Passwords are hashed with bcrypt before storage
 
 **Step 2: Email Verification**
 - System sends verification email with 6-digit token

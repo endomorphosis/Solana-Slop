@@ -130,6 +130,11 @@ export class ClientPortal {
       throw new Error("Invalid verification token");
     }
 
+    // Verify token matches the currently active token
+    if (profile.credentials.emailVerificationToken !== token) {
+      throw new Error("Invalid verification token");
+    }
+
     if (this.clock.now() > verification.expiresAt) {
       throw new Error("Verification token has expired");
     }
@@ -415,7 +420,11 @@ export class ClientPortal {
       throw new Error("Document not found");
     }
 
-    if (document.owner !== profile.encryption?.publicKey) {
+    // Normalize public keys to string for comparison
+    const documentOwner = String(document.owner);
+    const profilePublicKey = String(profile.encryption?.publicKey);
+    
+    if (documentOwner !== profilePublicKey) {
       throw new Error("Not authorized to decrypt this document");
     }
 
@@ -535,6 +544,7 @@ export class ClientPortal {
   /**
    * Submit a complaint for review
    * Integrates with complaint-generator to analyze and classify the complaint
+   * Permanently decrypts all attached documents for investor review
    */
   async submitComplaint(
     username: string,
@@ -556,6 +566,19 @@ export class ClientPortal {
 
     if (complaint.status !== "draft") {
       throw new Error("Complaint already submitted");
+    }
+
+    // Permanently decrypt all attached documents for investor review
+    // NOTE: In production, this would require user password confirmation in the UI
+    for (const documentId of complaint.documents) {
+      const document = this.encryptedDocuments.get(documentId);
+      if (document && !document.isPermanentlyDecrypted) {
+        // Mark document as permanently decrypted
+        // In production: Would decrypt and re-upload plaintext to IPFS
+        document.isPermanentlyDecrypted = true;
+        document.decryptedAt = this.clock.now();
+        document.decryptedCid = `decrypted_${document.cid}`;
+      }
     }
 
     // In production: Call complaint-generator API
@@ -679,8 +702,9 @@ export class ClientPortal {
       return [];
     }
 
+    const profilePublicKey = String(profile.encryption.publicKey);
     return Array.from(this.encryptedDocuments.values()).filter(
-      doc => doc.owner === profile.encryption!.publicKey
+      doc => String(doc.owner) === profilePublicKey
     );
   }
 
@@ -695,15 +719,66 @@ export class ClientPortal {
    * Verify UCAN token validity
    */
   verifyUCANToken(token: UCANToken): boolean {
+    // Check basic token structure
+    if (!token.id || !token.issuer || !token.audience || !token.signature) {
+      return false;
+    }
+
     // Check expiration
     if (this.clock.now() > token.expiresAt) {
       return false;
     }
 
-    // Verify signature
-    // In production, verify EdDSA signature using issuer's public key
-    // For now, just check that signature exists
-    return token.signature.length > 0;
+    // Verify signature integrity
+    // NOTE: This is a demonstration using HMAC. Production must use EdDSA with private keys.
+    // For now, we reconstruct the signature and compare using timing-safe comparison.
+    const providedSignature = token.signature;
+    
+    if (!providedSignature || providedSignature.length === 0) {
+      return false;
+    }
+
+    // Find the issuer's public key
+    // In the demo, we use the issuer DID to locate the client
+    let issuerPublicKey: string | undefined;
+    for (const profile of this.clientProfiles.values()) {
+      if (profile.encryption?.did === token.issuer) {
+        issuerPublicKey = String(profile.encryption.publicKey);
+        break;
+      }
+    }
+
+    if (!issuerPublicKey) {
+      return false;
+    }
+
+    // Recreate the expected signature using HMAC (demo only)
+    // Must match the format used in signUCANToken
+    const payload = JSON.stringify({
+      id: token.id,
+      issuer: token.issuer,
+      audience: token.audience,
+      capabilities: token.capabilities,
+      expiresAt: token.expiresAt
+    });
+    
+    const hmac = crypto.createHmac("sha256", issuerPublicKey);
+    hmac.update(payload);
+    const expectedSignature = hmac.digest("hex");
+
+    // Timing-safe comparison
+    try {
+      const expectedBuffer = Buffer.from(expectedSignature, "hex");
+      const providedBuffer = Buffer.from(providedSignature, "hex");
+      
+      if (expectedBuffer.length !== providedBuffer.length) {
+        return false;
+      }
+      
+      return crypto.timingSafeEqual(expectedBuffer, providedBuffer);
+    } catch {
+      return false;
+    }
   }
 
   /**
@@ -831,6 +906,11 @@ export class ClientPortal {
 
     if (profile.credentials.emailVerified) {
       throw new Error("Email already verified");
+    }
+
+    // Invalidate previous token if it exists
+    if (profile.credentials.emailVerificationToken) {
+      this.emailVerifications.delete(profile.credentials.emailVerificationToken);
     }
 
     // Generate new verification token

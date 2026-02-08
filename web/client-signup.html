@@ -648,10 +648,10 @@
                 return;
             }
 
-            // Store user data
-            userData = { username, email, password, walletAddress };
+            // Store non-sensitive user data (do not persist password)
+            userData = { username, email, walletAddress };
 
-            // Simulate account creation
+            // Simulate account creation (password used here but not stored)
             console.log('Creating account:', { username, email });
             
             // Display email in next step
@@ -699,7 +699,12 @@
 
             userData.kyc = kycData;
 
-            console.log('Submitting KYC information:', kycData);
+            // Log only non-sensitive fields for debugging
+            console.log('Submitting KYC information:', {
+                hasFullName: !!kycData.fullName,
+                hasAddress: !!kycData.address.city,
+                idType: kycData.idType
+            });
 
             nextStep();
         });
@@ -745,7 +750,8 @@
         }
 
         function launchKYCVerification() {
-            console.log('Launching KYC verification portal for:', userData);
+            // Log only non-sensitive info for debugging
+            console.log('Launching KYC verification portal for user:', userData.username);
             
             // In production, this would redirect to the third-party KYC provider
             // For demo, just show a message
@@ -759,7 +765,8 @@
         }
 
         function completeVerification() {
-            console.log('Completing registration:', userData);
+            // Log only non-sensitive info
+            console.log('Completing registration for user:', userData.username);
 
             // In production, this would:
             // 1. Submit all data to backend

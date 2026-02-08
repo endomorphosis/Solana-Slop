@@ -601,6 +601,70 @@ describe("ClientPortal", () => {
       expect(submitted.submittedAt).toBeDefined();
       expect(submitted.generatedComplaint).toBeDefined();
       expect(submitted.generatedComplaint!.cid).toBeDefined();
+
+      // Verify that attached documents are permanently decrypted
+      const documents = portal.getClientDocuments("testuser");
+      const attachedDoc = documents.find(d => d.id === doc.id);
+      expect(attachedDoc).toBeDefined();
+      expect(attachedDoc!.isPermanentlyDecrypted).toBe(true);
+      expect(attachedDoc!.decryptedAt).toBeDefined();
+      expect(attachedDoc!.decryptedCid).toBeDefined();
+    });
+
+    it("should permanently decrypt multiple attached documents on submission", async () => {
+      const profile = await portal.registerClient("testuser", "password123", "test@example.com");
+      const token = profile.credentials.emailVerificationToken!;
+      portal.verifyEmail("testuser", token);
+      
+      portal.submitKYCInformation("testuser", {
+        fullName: "Test User",
+        dateOfBirth: "1990-01-01",
+        ssnLast4: "1234",
+        address: {
+          street: "123 Test St",
+          city: "Test City",
+          state: "CA",
+          zipCode: "12345",
+          country: "USA"
+        },
+        phoneNumber: "+1234567890",
+        idType: "drivers_license"
+      });
+      portal.updateKYCStatus("testuser", "verified");
+
+      await portal.setupEncryption("testuser", "password123", "solana_key");
+
+      // Create multiple documents
+      const doc1 = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("evidence 1"),
+        { type: "evidence", name: "Document 1", cid: "QmDoc1" }
+      );
+
+      const doc2 = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("evidence 2"),
+        { type: "evidence", name: "Document 2", cid: "QmDoc2" }
+      );
+
+      const complaint = portal.createComplaint(
+        "testuser",
+        "Test Complaint",
+        "Complaint with multiple documents",
+        [doc1.id, doc2.id]
+      );
+
+      await portal.submitComplaint("testuser", complaint.id);
+
+      // Verify both documents are permanently decrypted
+      const documents = portal.getClientDocuments("testuser");
+      const attachedDoc1 = documents.find(d => d.id === doc1.id);
+      const attachedDoc2 = documents.find(d => d.id === doc2.id);
+      
+      expect(attachedDoc1!.isPermanentlyDecrypted).toBe(true);
+      expect(attachedDoc2!.isPermanentlyDecrypted).toBe(true);
     });
 
     it("should reject complaint submission for unverified client", async () => {
