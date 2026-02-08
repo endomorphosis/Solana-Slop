@@ -9,6 +9,7 @@ import type {
   CampaignOutcome,
   AppealRound
 } from "./types.js";
+import { SYSTEM_RECIPIENT_COURT } from "./types.js";
 
 const APPROVAL_THRESHOLD = 2;
 const WIN_APPEAL_THRESHOLD = 1; // Only 1 signer needed for win appeal
@@ -271,18 +272,17 @@ export class Campaign {
     
     this.outcome = outcome;
     
+    // Set judgment amount if provided and positive
+    if (judgmentAmount !== undefined && judgmentAmount > 0) {
+      this.judgmentAmount = judgmentAmount;
+    }
+    
     if (outcome === "settlement") {
       this.status = "settled";
     } else if (outcome === "win") {
       this.status = "won";
-      if (judgmentAmount !== undefined && judgmentAmount > 0) {
-        this.judgmentAmount = judgmentAmount;
-      }
     } else if (outcome === "loss") {
       this.status = "lost";
-      if (judgmentAmount !== undefined && judgmentAmount > 0) {
-        this.judgmentAmount = judgmentAmount;
-      }
     }
   }
 
@@ -321,7 +321,7 @@ export class Campaign {
     this.invoicePayments.push({
       invoiceId: `JUDGMENT-${this.clock.now()}`,
       amount,
-      recipient: "court",
+      recipient: SYSTEM_RECIPIENT_COURT,
       approvers: [] // System payment
     });
   }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Campaign } from "../../src/crowdfunding/campaign.js";
 import { makeKeypair, pubkey } from "../helpers/participants.js";
+import { SYSTEM_RECIPIENT_COURT } from "../../src/crowdfunding/types.js";
 
 class FakeClock {
   private nowUnix: number;
@@ -378,7 +379,7 @@ describe("crowdfunding campaign", () => {
       // Pay judgment
       campaign.payJudgment(50);
       expect(campaign.getInvoicePayments()).toHaveLength(1);
-      expect(campaign.getInvoicePayments()[0].recipient).toBe("court");
+      expect(campaign.getInvoicePayments()[0].recipient).toBe(SYSTEM_RECIPIENT_COURT);
     });
 
     it("requires only 1/3 approval for appeal after win", () => {
@@ -500,7 +501,12 @@ describe("crowdfunding campaign", () => {
       campaign.evaluateAppeal();
 
       expect(campaign.getStatus()).toBe("locked");
-      expect(campaign.getDaoFeeAmount()).toBe(40); // 15 from first round + 25 from appeal
+      // First round: 150 raised, 10% = 15
+      // Appeal round: 250 raised, 10% = 25
+      // Total: 15 + 25 = 40
+      const firstRoundFee = Math.floor(150 * 0.10);
+      const appealRoundFee = Math.floor(250 * 0.10);
+      expect(campaign.getDaoFeeAmount()).toBe(firstRoundFee + appealRoundFee);
     });
 
     it("refunds if appeal round fails to meet goal", () => {

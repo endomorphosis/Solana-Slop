@@ -1,5 +1,8 @@
 export type PublicKeyLike = string;
 
+/** Special recipient identifier for system payments (e.g., court judgments) */
+export const SYSTEM_RECIPIENT_COURT = "court" as const;
+
 export interface Clock {
   now(): number;
 }
