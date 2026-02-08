@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attorney Sign-Up Portal - Solana Crowdfunding Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .practice-areas {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .practice-area-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .practice-area-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .practice-area-item label {
+            margin-bottom: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .button-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            margin-top: 10px;
+        }
+
+        .button-secondary:hover {
+            background: #f5f5f5;
+        }
+
+        .error {
+            color: #e53e3e;
+            font-size: 0.9em;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .success-message {
+            background: #48bb78;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .success-message.show {
+            display: block;
+        }
+
+        .info-box {
+            background: #edf2f7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .info-box h3 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-box p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status-pending {
+            background: #fef5e7;
+            color: #d68910;
+        }
+
+        .status-verified {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .progress-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: white;
+            border: 2px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .progress-step.active .progress-circle {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-color: #667eea;
+            color: white;
+        }
+
+        .progress-step.completed .progress-circle {
+            background: #48bb78;
+            border-color: #48bb78;
+            color: white;
+        }
+
+        .progress-label {
+            font-size: 0.85em;
+            color: #666;
+            text-align: center;
+        }
+
+        .helper-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>Attorney Sign-Up Portal</h1>
+            <p class="subtitle">Join our legal crowdfunding platform</p>
+
+            <div class="progress-bar">
+                <div class="progress-step active" id="progress-step-1">
+                    <div class="progress-circle">1</div>
+                    <div class="progress-label">Registration</div>
+                </div>
+                <div class="progress-step" id="progress-step-2">
+                    <div class="progress-circle">2</div>
+                    <div class="progress-label">Email Verify</div>
+                </div>
+                <div class="progress-step" id="progress-step-3">
+                    <div class="progress-circle">3</div>
+                    <div class="progress-label">Profile</div>
+                </div>
+                <div class="progress-step" id="progress-step-4">
+                    <div class="progress-circle">4</div>
+                    <div class="progress-label">Review</div>
+                </div>
+            </div>
+
+            <div class="success-message" id="success-message"></div>
+
+            <!-- Step 1: Registration -->
+            <div class="form-step active" id="step-1">
+                <div class="info-box">
+                    <h3>Create Your Account</h3>
+                    <p>Start by creating your account with a username and password. You'll need to verify your email before continuing.</p>
+                </div>
+
+                <form id="registration-form">
+                    <div class="form-group">
+                        <label for="username">Username *</label>
+                        <input type="text" id="username" name="username" required>
+                        <div class="error" id="username-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" name="email" required>
+                        <div class="error" id="email-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <input type="password" id="password" name="password" required minlength="8">
+                        <p class="helper-text">Minimum 8 characters</p>
+                        <div class="error" id="password-error"></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm-password">Confirm Password *</label>
+                        <input type="password" id="confirm-password" name="confirm-password" required>
+                        <div class="error" id="confirm-password-error"></div>
+                    </div>
+
+                    <button type="submit" class="button">Create Account</button>
+                </form>
+            </div>
+
+            <!-- Step 2: Email Verification -->
+            <div class="form-step" id="step-2">
+                <div class="info-box">
+                    <h3>Verify Your Email</h3>
+                    <p>We've sent a verification link to your email address. Please check your inbox and click the link to verify your email.</p>
+                </div>
+
+                <form id="verification-form">
+                    <div class="form-group">
+                        <label for="verification-token">Verification Code</label>
+                        <input type="text" id="verification-token" name="verification-token" required>
+                        <p class="helper-text">Enter the verification code from your email</p>
+                        <div class="error" id="verification-error"></div>
+                    </div>
+
+                    <button type="submit" class="button">Verify Email</button>
+                    <button type="button" class="button button-secondary" onclick="resendVerification()">Resend Verification Email</button>
+                </form>
+            </div>
+
+            <!-- Step 3: Profile Details -->
+            <div class="form-step" id="step-3">
+                <div class="info-box">
+                    <h3>Complete Your Profile</h3>
+                    <p>Provide your professional details including bar license information and practice areas.</p>
+                </div>
+
+                <form id="profile-form">
+                    <div class="form-group">
+                        <label for="full-name">Full Name *</label>
+                        <input type="text" id="full-name" name="full-name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="wallet-address">Solana Wallet Address *</label>
+                        <input type="text" id="wallet-address" name="wallet-address" required>
+                        <p class="helper-text">Your Solana public key for receiving payments</p>
+                    </div>
+
+                    <h3 style="margin: 20px 0 10px 0; color: #333;">Bar License Information</h3>
+
+                    <div class="form-group">
+                        <label for="bar-state">State Bar *</label>
+                        <select id="bar-state" name="bar-state" required>
+                            <option value="">Select a state...</option>
+                            <option value="Alabama">Alabama</option>
+                            <option value="Alaska">Alaska</option>
+                            <option value="Arizona">Arizona</option>
+                            <option value="Arkansas">Arkansas</option>
+                            <option value="California">California</option>
+                            <option value="Colorado">Colorado</option>
+                            <option value="Connecticut">Connecticut</option>
+                            <option value="Delaware">Delaware</option>
+                            <option value="Florida">Florida</option>
+                            <option value="Georgia">Georgia</option>
+                            <option value="Hawaii">Hawaii</option>
+                            <option value="Idaho">Idaho</option>
+                            <option value="Illinois">Illinois</option>
+                            <option value="Indiana">Indiana</option>
+                            <option value="Iowa">Iowa</option>
+                            <option value="Kansas">Kansas</option>
+                            <option value="Kentucky">Kentucky</option>
+                            <option value="Louisiana">Louisiana</option>
+                            <option value="Maine">Maine</option>
+                            <option value="Maryland">Maryland</option>
+                            <option value="Massachusetts">Massachusetts</option>
+                            <option value="Michigan">Michigan</option>
+                            <option value="Minnesota">Minnesota</option>
+                            <option value="Mississippi">Mississippi</option>
+                            <option value="Missouri">Missouri</option>
+                            <option value="Montana">Montana</option>
+                            <option value="Nebraska">Nebraska</option>
+                            <option value="Nevada">Nevada</option>
+                            <option value="New Hampshire">New Hampshire</option>
+                            <option value="New Jersey">New Jersey</option>
+                            <option value="New Mexico">New Mexico</option>
+                            <option value="New York">New York</option>
+                            <option value="North Carolina">North Carolina</option>
+                            <option value="North Dakota">North Dakota</option>
+                            <option value="Ohio">Ohio</option>
+                            <option value="Oklahoma">Oklahoma</option>
+                            <option value="Oregon">Oregon</option>
+                            <option value="Pennsylvania">Pennsylvania</option>
+                            <option value="Rhode Island">Rhode Island</option>
+                            <option value="South Carolina">South Carolina</option>
+                            <option value="South Dakota">South Dakota</option>
+                            <option value="Tennessee">Tennessee</option>
+                            <option value="Texas">Texas</option>
+                            <option value="Utah">Utah</option>
+                            <option value="Vermont">Vermont</option>
+                            <option value="Virginia">Virginia</option>
+                            <option value="Washington">Washington</option>
+                            <option value="West Virginia">West Virginia</option>
+                            <option value="Wisconsin">Wisconsin</option>
+                            <option value="Wyoming">Wyoming</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="license-number">Bar License Number *</label>
+                        <input type="text" id="license-number" name="license-number" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="year-admitted">Year Admitted to Bar *</label>
+                        <input type="number" id="year-admitted" name="year-admitted" required min="1950" max="2024">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="license-status">License Status *</label>
+                        <select id="license-status" name="license-status" required>
+                            <option value="">Select status...</option>
+                            <option value="active">Active</option>
+                            <option value="inactive">Inactive</option>
+                            <option value="suspended">Suspended</option>
+                        </select>
+                    </div>
+
+                    <h3 style="margin: 20px 0 10px 0; color: #333;">Practice Areas *</h3>
+                    <p class="helper-text" style="margin-bottom: 10px;">Select all that apply</p>
+
+                    <div class="practice-areas">
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-civil" name="practice-area" value="civil_litigation">
+                            <label for="pa-civil">Civil Litigation</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-criminal" name="practice-area" value="criminal_defense">
+                            <label for="pa-criminal">Criminal Defense</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-family" name="practice-area" value="family_law">
+                            <label for="pa-family">Family Law</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-ip" name="practice-area" value="intellectual_property">
+                            <label for="pa-ip">Intellectual Property</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-corporate" name="practice-area" value="corporate_law">
+                            <label for="pa-corporate">Corporate Law</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-real-estate" name="practice-area" value="real_estate">
+                            <label for="pa-real-estate">Real Estate</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-employment" name="practice-area" value="employment_law">
+                            <label for="pa-employment">Employment Law</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-personal-injury" name="practice-area" value="personal_injury">
+                            <label for="pa-personal-injury">Personal Injury</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-immigration" name="practice-area" value="immigration">
+                            <label for="pa-immigration">Immigration</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-bankruptcy" name="practice-area" value="bankruptcy">
+                            <label for="pa-bankruptcy">Bankruptcy</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-tax" name="practice-area" value="tax_law">
+                            <label for="pa-tax">Tax Law</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-environmental" name="practice-area" value="environmental_law">
+                            <label for="pa-environmental">Environmental Law</label>
+                        </div>
+                        <div class="practice-area-item">
+                            <input type="checkbox" id="pa-other" name="practice-area" value="other">
+                            <label for="pa-other">Other</label>
+                        </div>
+                    </div>
+                    <div class="error" id="practice-areas-error"></div>
+
+                    <div class="form-group" style="margin-top: 20px;">
+                        <label for="bio">Professional Bio (Optional)</label>
+                        <textarea id="bio" name="bio" placeholder="Brief description of your experience and expertise..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="accepts-solicitations" name="accepts-solicitations">
+                            <label for="accepts-solicitations">I accept solicitations from potential clients</label>
+                        </div>
+                        <p class="helper-text">Allow clients to contact you directly through the platform</p>
+                    </div>
+
+                    <button type="submit" class="button">Submit Profile</button>
+                </form>
+            </div>
+
+            <!-- Step 4: Pending Review -->
+            <div class="form-step" id="step-4">
+                <div class="info-box">
+                    <h3>Profile Submitted Successfully! 🎉</h3>
+                    <p>Your profile has been submitted and is pending admin verification. An administrator will verify your bar license information with the state bar website before your profile goes live.</p>
+                </div>
+
+                <div style="text-align: center; margin: 30px 0;">
+                    <h3 style="color: #333; margin-bottom: 10px;">Current Status</h3>
+                    <span class="status-badge status-pending" id="status-badge">Pending Verification</span>
+                </div>
+
+                <div class="info-box" style="margin-top: 20px;">
+                    <h3>What's Next?</h3>
+                    <ul style="margin-left: 20px; color: #666; line-height: 1.8;">
+                        <li>Our admin team will verify your bar license with your state bar website</li>
+                        <li>This process typically takes 1-3 business days</li>
+                        <li>You'll receive an email notification once your profile is verified</li>
+                        <li>After verification, your profile will be visible to potential clients</li>
+                    </ul>
+                </div>
+
+                <button type="button" class="button" onclick="checkStatus()">Check Status</button>
+                <button type="button" class="button button-secondary" onclick="window.location.reload()">Submit Another Profile</button>
+            </div>
+        </div>
+
+        <div style="text-align: center; color: white; margin-top: 20px;">
+            <p>Already have an account? <a href="#" class="link" style="color: white;">Sign In</a></p>
+            <p style="margin-top: 10px;"><a href="admin-dashboard.html" class="link" style="color: white;">Go to Admin Dashboard</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Mock data storage (in production, this would be API calls)
+        let currentStep = 1;
+        let registrationData = {};
+
+        // Step 1: Registration Form
+        document.getElementById('registration-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm-password').value;
+
+            // Clear errors
+            document.querySelectorAll('.error').forEach(e => e.classList.remove('show'));
+
+            // Validate
+            if (password !== confirmPassword) {
+                document.getElementById('confirm-password-error').textContent = 'Passwords do not match';
+                document.getElementById('confirm-password-error').classList.add('show');
+                return;
+            }
+
+            // Store registration data
+            registrationData = {
+                username,
+                email,
+                registrationId: 'reg_' + Date.now(),
+                verificationToken: Math.random().toString(36).substring(2, 15)
+            };
+
+            // Show success and move to next step
+            showSuccess('Account created successfully! Please check your email for verification.');
+            goToStep(2);
+        });
+
+        // Step 2: Email Verification
+        document.getElementById('verification-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const token = document.getElementById('verification-token').value;
+            
+            // In production, verify token with API
+            // For demo, accept any token
+            if (token && token.length > 0) {
+                registrationData.emailVerified = true;
+                showSuccess('Email verified successfully!');
+                goToStep(3);
+            } else {
+                document.getElementById('verification-error').textContent = 'Invalid verification code';
+                document.getElementById('verification-error').classList.add('show');
+            }
+        });
+
+        // Step 3: Profile Form
+        document.getElementById('profile-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // Clear errors
+            document.querySelectorAll('.error').forEach(e => e.classList.remove('show'));
+
+            // Get practice areas
+            const practiceAreas = Array.from(document.querySelectorAll('input[name="practice-area"]:checked'))
+                .map(cb => cb.value);
+
+            if (practiceAreas.length === 0) {
+                document.getElementById('practice-areas-error').textContent = 'Please select at least one practice area';
+                document.getElementById('practice-areas-error').classList.add('show');
+                return;
+            }
+
+            // Store profile data
+            registrationData.profile = {
+                fullName: document.getElementById('full-name').value,
+                walletAddress: document.getElementById('wallet-address').value,
+                barLicense: {
+                    state: document.getElementById('bar-state').value,
+                    licenseNumber: document.getElementById('license-number').value,
+                    yearAdmitted: parseInt(document.getElementById('year-admitted').value),
+                    status: document.getElementById('license-status').value
+                },
+                practiceAreas,
+                bio: document.getElementById('bio').value,
+                acceptsSolicitations: document.getElementById('accepts-solicitations').checked
+            };
+
+            // Show success and move to final step
+            showSuccess('Profile submitted successfully!');
+            goToStep(4);
+        });
+
+        function goToStep(step) {
+            // Update current step
+            currentStep = step;
+
+            // Hide all steps
+            document.querySelectorAll('.form-step').forEach(s => s.classList.remove('active'));
+            
+            // Show target step
+            document.getElementById('step-' + step).classList.add('active');
+
+            // Update progress bar
+            updateProgressBar(step);
+
+            // Scroll to top
+            window.scrollTo(0, 0);
+        }
+
+        function updateProgressBar(step) {
+            document.querySelectorAll('.progress-step').forEach((s, i) => {
+                s.classList.remove('active', 'completed');
+                if (i + 1 < step) {
+                    s.classList.add('completed');
+                } else if (i + 1 === step) {
+                    s.classList.add('active');
+                }
+            });
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('success-message');
+            successEl.textContent = message;
+            successEl.classList.add('show');
+            
+            setTimeout(() => {
+                successEl.classList.remove('show');
+            }, 5000);
+        }
+
+        function resendVerification() {
+            showSuccess('Verification email resent! Please check your inbox.');
+        }
+
+        function checkStatus() {
+            // In production, this would check status via API
+            showSuccess('Your profile is still pending verification. You will be notified by email once verified.');
+        }
+
+        // Initialize
+        updateProgressBar(1);
+    </script>
+</body>
+</html>

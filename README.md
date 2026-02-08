@@ -296,6 +296,11 @@ The web interface provides:
   - View case details including current outcome, available funds, and appeal rounds
   - Statistics showing cases by status and court level
   - Identify cases that have completed fundraising but are still in legal proceedings
+- **Attorney Verification tab**: Review and verify attorney profiles
+  - View pending attorney registrations with bar license details
+  - Verify bar licenses using state bar website links
+  - Approve or reject attorney profiles with notes
+  - Filter by verification status (Pending, Verified, Rejected)
 - **Accounts tab**: Manage user, client, and attorney accounts with filtering
 - **User Profiles tab**: Detailed profile analysis with cross-linking
   - Filter by investors, clients, or attorneys
@@ -307,6 +312,101 @@ The web interface provides:
 - **Transactions tab**: View complete transaction history by wallet or campaign
 
 *Note: The web interface is a frontend demo. In production, connect it to the AdminDashboard API via a backend service.*
+
+### Attorney Sign-Up Portal
+
+A separate attorney sign-up portal is available at `web/attorney-signup.html` for attorneys to register and create profiles on the platform.
+
+```bash
+# Visit http://localhost:8000/web/attorney-signup.html
+```
+
+#### Attorney Registration Workflow
+
+**Step 1: Account Creation**
+- Attorneys create an account with username, email, and password
+- Password must be at least 8 characters
+
+**Step 2: Email Verification**
+- System sends verification email with token
+- Attorney verifies email by entering verification code
+
+**Step 3: Profile Completion**
+- Attorney provides professional details:
+  - Full name and Solana wallet address
+  - Bar license information (state, license number, year admitted, status)
+  - Practice areas (multiple selections allowed)
+  - Professional bio
+  - Solicitation preferences (whether to accept client inquiries)
+
+**Step 4: Admin Verification**
+- Profile enters "Pending" status
+- Admin reviews profile in the Attorney Verification tab
+- Admin verifies bar license with state bar website
+- Admin approves or rejects with notes
+- Attorney receives email notification of decision
+
+**Step 5: Profile Goes Live**
+- Approved attorneys are registered as accounts in the system
+- Profiles become visible to potential clients
+- Attorneys can update their practice areas, bio, and solicitation preferences
+
+#### API Usage
+
+```typescript
+import { AdminDashboard } from "./src/admin/dashboard.js";
+
+const dashboard = new AdminDashboard(clock);
+
+// Step 1: Attorney registers
+const registration = dashboard.registerAttorneySignup(
+  "attorney_username",
+  "attorney@example.com"
+);
+
+// Step 2: Verify email
+dashboard.verifyAttorneyEmail(registration.id, registration.verificationToken!);
+
+// Step 3: Submit profile details
+const profile = dashboard.submitAttorneyDetails(
+  registration.id,
+  "attorney_wallet",
+  "John Attorney",
+  {
+    state: "California",
+    licenseNumber: "CA123456",
+    yearAdmitted: 2015,
+    status: "active"
+  },
+  ["civil_litigation", "personal_injury"],
+  true, // accepts solicitations
+  "Experienced attorney with 10+ years in civil litigation"
+);
+
+// Step 4: Admin verifies profile
+dashboard.verifyAttorneyProfile(
+  "attorney_wallet",
+  "admin_wallet",
+  true, // approved
+  "Verified with California State Bar"
+);
+
+// Update attorney profile
+dashboard.updateAttorneyProfile("attorney_wallet", {
+  practiceAreas: ["civil_litigation", "personal_injury", "employment_law"],
+  acceptsSolicitations: false,
+  bio: "Updated professional bio"
+});
+
+// Search for verified attorneys
+const civilLitigators = dashboard.searchVerifiedAttorneys("civil_litigation", true);
+
+// Get attorney profile
+const attorneyProfile = dashboard.getAttorneyProfile("attorney_wallet");
+
+// List pending attorneys for admin review
+const pendingAttorneys = dashboard.listPendingAttorneys();
+```
 
 ### Accessibility
 The web interface includes ARIA attributes for improved accessibility:
