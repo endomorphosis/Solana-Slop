@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Client Sign-Up Portal - Solana Crowdfunding Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #14b8a6 0%, #0891b2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+            text-align: center;
+        }
+
+        .subtitle {
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+
+        .progress-bar {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .progress-bar::before {
+            content: '';
+            position: absolute;
+            top: 20px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: #e0e0e0;
+            z-index: 0;
+        }
+
+        .progress-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            flex: 1;
+        }
+
+        .progress-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #999;
+            margin-bottom: 8px;
+        }
+
+        .progress-step.active .progress-circle {
+            background: linear-gradient(135deg, #14b8a6 0%, #0891b2 100%);
+            color: white;
+        }
+
+        .progress-step.completed .progress-circle {
+            background: #10b981;
+            color: white;
+        }
+
+        .progress-label {
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+        }
+
+        .form-step {
+            display: none;
+        }
+
+        .form-step.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        input[type="tel"],
+        input[type="date"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #14b8a6;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .helper-text {
+            font-size: 0.85em;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .error-text {
+            font-size: 0.85em;
+            color: #ef4444;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #14b8a6 0%, #0891b2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(20, 184, 166, 0.4);
+        }
+
+        .button:active {
+            transform: translateY(0);
+        }
+
+        .button-secondary {
+            background: #6b7280;
+            margin-right: 10px;
+        }
+
+        .button-secondary:hover {
+            box-shadow: 0 5px 15px rgba(107, 114, 128, 0.4);
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .button-full {
+            width: 100%;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-group label {
+            margin-bottom: 0;
+            cursor: pointer;
+            font-weight: normal;
+        }
+
+        .info-box {
+            background: #f0fdfa;
+            border-left: 4px solid #14b8a6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .info-box h3 {
+            color: #0891b2;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-box p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .success-message {
+            background: #d1fae5;
+            border: 2px solid #10b981;
+            color: #065f46;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .success-message.active {
+            display: block;
+        }
+
+        .success-message h2 {
+            color: #065f46;
+            margin-bottom: 10px;
+        }
+
+        .document-list {
+            margin-top: 15px;
+        }
+
+        .document-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+
+        .document-item .name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .document-item .actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .document-item button {
+            padding: 5px 15px;
+            font-size: 0.9em;
+        }
+
+        .encryption-badge {
+            display: inline-block;
+            background: #10b981;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .kyc-provider-link {
+            display: block;
+            text-align: center;
+            padding: 15px;
+            background: #f0fdfa;
+            border: 2px dashed #14b8a6;
+            border-radius: 10px;
+            color: #0891b2;
+            text-decoration: none;
+            font-weight: 600;
+            margin: 20px 0;
+            transition: background 0.3s ease;
+        }
+
+        .kyc-provider-link:hover {
+            background: #ccfbf1;
+        }
+
+        .address-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .address-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        @media (max-width: 600px) {
+            .address-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <h1>🔐 Client Sign-Up</h1>
+            <p class="subtitle">Secure Registration for Legal Crowdfunding</p>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar">
+                <div class="progress-step active" data-step="1">
+                    <div class="progress-circle">1</div>
+                    <div class="progress-label">Account</div>
+                </div>
+                <div class="progress-step" data-step="2">
+                    <div class="progress-circle">2</div>
+                    <div class="progress-label">Verify Email</div>
+                </div>
+                <div class="progress-step" data-step="3">
+                    <div class="progress-circle">3</div>
+                    <div class="progress-label">KYC Info</div>
+                </div>
+                <div class="progress-step" data-step="4">
+                    <div class="progress-circle">4</div>
+                    <div class="progress-label">ID Verification</div>
+                </div>
+                <div class="progress-step" data-step="5">
+                    <div class="progress-circle">5</div>
+                    <div class="progress-label">Complete</div>
+                </div>
+            </div>
+
+            <!-- Step 1: Account Creation -->
+            <div class="form-step active" data-step="1">
+                <h2>Create Your Account</h2>
+                <div class="info-box">
+                    <h3>🔒 Your Security Matters</h3>
+                    <p>Your password will be used to encrypt all your legal documents and personal information. Choose a strong, memorable password that you won't forget.</p>
+                </div>
+
+                <form id="accountForm">
+                    <div class="form-group">
+                        <label for="username">Username *</label>
+                        <input type="text" id="username" required minlength="3">
+                        <span class="helper-text">Minimum 3 characters, alphanumeric</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email Address *</label>
+                        <input type="email" id="email" required>
+                        <span class="helper-text">We'll send a verification code here</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Password *</label>
+                        <input type="password" id="password" required minlength="8">
+                        <span class="helper-text">Minimum 8 characters</span>
+                        <span class="error-text" id="passwordError">Password must be at least 8 characters</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password *</label>
+                        <input type="password" id="confirmPassword" required>
+                        <span class="error-text" id="confirmPasswordError">Passwords do not match</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="walletAddress">Solana Wallet Address (Optional)</label>
+                        <input type="text" id="walletAddress">
+                        <span class="helper-text">You can add this later</span>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="termsAgree" required>
+                        <label for="termsAgree">I agree to the Terms of Service and Privacy Policy *</label>
+                    </div>
+
+                    <button type="submit" class="button button-full" style="margin-top: 20px;">Create Account</button>
+                </form>
+            </div>
+
+            <!-- Step 2: Email Verification -->
+            <div class="form-step" data-step="2">
+                <h2>Verify Your Email</h2>
+                <div class="info-box">
+                    <h3>📧 Check Your Inbox</h3>
+                    <p>We've sent a 6-digit verification code to <strong id="emailDisplay"></strong>. Please enter the code below.</p>
+                </div>
+
+                <form id="emailVerificationForm">
+                    <div class="form-group">
+                        <label for="verificationCode">Verification Code *</label>
+                        <input type="text" id="verificationCode" required maxlength="6" pattern="[0-9]{6}" style="text-align: center; font-size: 1.5em; letter-spacing: 0.5em;">
+                        <span class="helper-text">Enter the 6-digit code from your email</span>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="button button-secondary" onclick="previousStep()">Back</button>
+                        <button type="submit" class="button" style="flex: 1;">Verify Email</button>
+                    </div>
+
+                    <p style="text-align: center; margin-top: 20px; color: #666;">
+                        Didn't receive the code? <a href="#" onclick="resendCode(); return false;" style="color: #14b8a6;">Resend</a>
+                    </p>
+                </form>
+            </div>
+
+            <!-- Step 3: KYC Information -->
+            <div class="form-step" data-step="3">
+                <h2>Personal Information (KYC)</h2>
+                <div class="info-box">
+                    <h3>🛡️ Why We Need This</h3>
+                    <p>To comply with legal and financial regulations, we need to verify your identity. All information is encrypted with your password and stored securely.</p>
+                </div>
+
+                <form id="kycForm">
+                    <div class="form-group">
+                        <label for="fullName">Full Legal Name *</label>
+                        <input type="text" id="fullName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateOfBirth">Date of Birth *</label>
+                        <input type="date" id="dateOfBirth" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phoneNumber">Phone Number *</label>
+                        <input type="tel" id="phoneNumber" required>
+                        <span class="helper-text">Format: (123) 456-7890</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="ssnLast4">Last 4 Digits of SSN *</label>
+                        <input type="text" id="ssnLast4" required maxlength="4" pattern="[0-9]{4}">
+                        <span class="helper-text">Only the last 4 digits are stored</span>
+                    </div>
+
+                    <h3 style="margin: 30px 0 20px 0;">Residential Address</h3>
+
+                    <div class="address-grid">
+                        <div class="form-group full-width">
+                            <label for="street">Street Address *</label>
+                            <input type="text" id="street" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="city">City *</label>
+                            <input type="text" id="city" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="state">State *</label>
+                            <select id="state" required>
+                                <option value="">Select State</option>
+                                <option value="AL">Alabama</option>
+                                <option value="AK">Alaska</option>
+                                <option value="AZ">Arizona</option>
+                                <option value="AR">Arkansas</option>
+                                <option value="CA">California</option>
+                                <option value="CO">Colorado</option>
+                                <option value="CT">Connecticut</option>
+                                <option value="DE">Delaware</option>
+                                <option value="FL">Florida</option>
+                                <option value="GA">Georgia</option>
+                                <!-- Add more states as needed -->
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="zipCode">ZIP Code *</label>
+                            <input type="text" id="zipCode" required maxlength="5" pattern="[0-9]{5}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="country">Country *</label>
+                            <select id="country" required>
+                                <option value="USA">United States</option>
+                                <option value="Canada">Canada</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="idType">Government ID Type *</label>
+                        <select id="idType" required>
+                            <option value="">Select ID Type</option>
+                            <option value="drivers_license">Driver's License</option>
+                            <option value="passport">Passport</option>
+                            <option value="state_id">State ID</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="button-group">
+                        <button type="button" class="button button-secondary" onclick="previousStep()">Back</button>
+                        <button type="submit" class="button" style="flex: 1;">Continue to ID Verification</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Step 4: ID Verification -->
+            <div class="form-step" data-step="4">
+                <h2>Identity Verification</h2>
+                <div class="info-box">
+                    <h3>🔐 Third-Party Verification</h3>
+                    <p>For your security and ours, we use a trusted third-party service to verify your identity. Your sensitive documents (driver's license, passport, etc.) are <strong>never stored on our servers</strong>.</p>
+                </div>
+
+                <div style="text-align: center; padding: 30px 0;">
+                    <h3 style="margin-bottom: 20px;">Next Steps:</h3>
+                    <ol style="text-align: left; max-width: 500px; margin: 0 auto; line-height: 2;">
+                        <li>Click the verification link below</li>
+                        <li>Upload a photo of your government ID</li>
+                        <li>Take a selfie for identity matching</li>
+                        <li>Return here once verification is complete</li>
+                    </ol>
+
+                    <a href="#" class="kyc-provider-link" onclick="launchKYCVerification(); return false;">
+                        🔗 Launch Identity Verification Portal
+                    </a>
+
+                    <p style="color: #666; margin: 20px 0;">
+                        <strong>Verification Partner:</strong> Stripe Identity / Persona / Onfido<br>
+                        <em>(Industry-standard identity verification service)</em>
+                    </p>
+                </div>
+
+                <div class="checkbox-group" style="justify-content: center;">
+                    <input type="checkbox" id="verificationComplete">
+                    <label for="verificationComplete">I have completed the identity verification</label>
+                </div>
+
+                <div class="button-group">
+                    <button type="button" class="button button-secondary" onclick="previousStep()">Back</button>
+                    <button type="button" class="button" style="flex: 1;" onclick="completeVerification()" id="completeBtn" disabled>Complete Sign-Up</button>
+                </div>
+            </div>
+
+            <!-- Step 5: Success -->
+            <div class="form-step" data-step="5">
+                <div class="success-message active">
+                    <h2>✅ Registration Complete!</h2>
+                    <p style="margin-top: 15px; font-size: 1.1em;">Your account has been created and is pending admin approval.</p>
+                </div>
+
+                <div class="info-box" style="margin-top: 20px;">
+                    <h3>🎯 What's Next?</h3>
+                    <ol style="line-height: 2; margin-top: 10px;">
+                        <li><strong>Review Period:</strong> Our admin team will review your KYC verification (typically 1-2 business days)</li>
+                        <li><strong>Email Notification:</strong> You'll receive an email once your account is approved</li>
+                        <li><strong>Access Complaint Generator:</strong> Use our AI-powered tool to draft your legal complaint</li>
+                        <li><strong>Secure Document Storage:</strong> All your documents are encrypted with your password</li>
+                        <li><strong>Delegate to Attorneys:</strong> Share encrypted documents with attorneys using UCAN tokens</li>
+                        <li><strong>Submit for Crowdfunding:</strong> Once ready, submit your complaint for campaign approval</li>
+                    </ol>
+                </div>
+
+                <div style="margin-top: 30px; padding: 20px; background: #f0fdfa; border-radius: 10px;">
+                    <h3 style="color: #0891b2; margin-bottom: 10px;">🔒 Your Security Setup</h3>
+                    <p style="color: #666; line-height: 1.6;">
+                        <strong>Encryption:</strong> <span class="encryption-badge">AES-256-GCM</span><br>
+                        <strong>Key Derivation:</strong> PBKDF2 with 100,000 iterations<br>
+                        <strong>Storage:</strong> IPFS with client-side encryption<br>
+                        <strong>Access Control:</strong> UCAN token-based delegation
+                    </p>
+                </div>
+
+                <button type="button" class="button button-full" onclick="goToComplaintGenerator()" style="margin-top: 30px;">
+                    📝 Go to Complaint Generator (Demo)
+                </button>
+
+                <p style="text-align: center; margin-top: 20px; color: #666;">
+                    <a href="/web/admin-dashboard.html" style="color: #14b8a6;">Return to Dashboard</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        let userData = {};
+
+        // Account Form Submission
+        document.getElementById('accountForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const walletAddress = document.getElementById('walletAddress').value;
+
+            // Validation
+            if (password.length < 8) {
+                document.getElementById('passwordError').style.display = 'block';
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                document.getElementById('confirmPasswordError').style.display = 'block';
+                return;
+            }
+
+            // Store non-sensitive user data (do not persist password)
+            userData = { username, email, walletAddress };
+
+            // Simulate account creation (password used here but not stored)
+            console.log('Creating account:', { username, email });
+            
+            // Display email in next step
+            document.getElementById('emailDisplay').textContent = email;
+
+            // Move to next step
+            nextStep();
+        });
+
+        // Email Verification Form
+        document.getElementById('emailVerificationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const code = document.getElementById('verificationCode').value;
+
+            // Simulate verification
+            console.log('Verifying email with code:', code);
+
+            // In production, verify the code here
+            if (code.length === 6) {
+                nextStep();
+            } else {
+                alert('Please enter a valid 6-digit code');
+            }
+        });
+
+        // KYC Form Submission
+        document.getElementById('kycForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const kycData = {
+                fullName: document.getElementById('fullName').value,
+                dateOfBirth: document.getElementById('dateOfBirth').value,
+                phoneNumber: document.getElementById('phoneNumber').value,
+                ssnLast4: document.getElementById('ssnLast4').value,
+                address: {
+                    street: document.getElementById('street').value,
+                    city: document.getElementById('city').value,
+                    state: document.getElementById('state').value,
+                    zipCode: document.getElementById('zipCode').value,
+                    country: document.getElementById('country').value
+                },
+                idType: document.getElementById('idType').value
+            };
+
+            userData.kyc = kycData;
+
+            // Log only non-sensitive fields for debugging
+            console.log('Submitting KYC information:', {
+                hasFullName: !!kycData.fullName,
+                hasAddress: !!kycData.address.city,
+                idType: kycData.idType
+            });
+
+            nextStep();
+        });
+
+        // Enable complete button when verification checkbox is checked
+        document.getElementById('verificationComplete').addEventListener('change', function() {
+            document.getElementById('completeBtn').disabled = !this.checked;
+        });
+
+        function nextStep() {
+            currentStep++;
+            updateStepDisplay();
+        }
+
+        function previousStep() {
+            currentStep--;
+            updateStepDisplay();
+        }
+
+        function updateStepDisplay() {
+            // Hide all steps
+            document.querySelectorAll('.form-step').forEach(step => {
+                step.classList.remove('active');
+            });
+
+            // Show current step
+            document.querySelector(`.form-step[data-step="${currentStep}"]`).classList.add('active');
+
+            // Update progress bar
+            document.querySelectorAll('.progress-step').forEach((step, index) => {
+                step.classList.remove('active', 'completed');
+                if (index + 1 < currentStep) {
+                    step.classList.add('completed');
+                } else if (index + 1 === currentStep) {
+                    step.classList.add('active');
+                }
+            });
+        }
+
+        function resendCode() {
+            console.log('Resending verification code to:', userData.email);
+            alert('Verification code resent! Please check your email.');
+        }
+
+        function launchKYCVerification() {
+            // Log only non-sensitive info for debugging
+            console.log('Launching KYC verification portal for user:', userData.username);
+            
+            // In production, this would redirect to the third-party KYC provider
+            // For demo, just show a message
+            alert('In production, this would redirect to a third-party identity verification service like Stripe Identity, Persona, or Onfido.\n\nThey would:\n1. Verify your government ID\n2. Perform liveness check (selfie)\n3. Match your photo to your ID\n4. Return verification results\n\nYour sensitive documents are NEVER stored on our servers.');
+            
+            // Simulate verification completion
+            setTimeout(() => {
+                document.getElementById('verificationComplete').checked = true;
+                document.getElementById('completeBtn').disabled = false;
+            }, 2000);
+        }
+
+        function completeVerification() {
+            // Log only non-sensitive info
+            console.log('Completing registration for user:', userData.username);
+
+            // In production, this would:
+            // 1. Submit all data to backend
+            // 2. Create encrypted client profile
+            // 3. Initialize IPFS configuration
+            // 4. Generate UCAN DID
+            // 5. Set up encryption keys
+
+            nextStep();
+        }
+
+        function goToComplaintGenerator() {
+            console.log('Navigating to complaint generator');
+            alert('The complaint generator integration uses the Python-based system from packages/complaint-generator.\n\nIt provides:\n- AI-powered legal complaint generation\n- Evidence management with IPFS\n- Legal research and statute retrieval\n- Document encryption and UCAN delegation\n\nIn production, this would launch the complaint generator interface.');
+        }
+
+        // Password validation
+        document.getElementById('password').addEventListener('input', function() {
+            const error = document.getElementById('passwordError');
+            if (this.value.length >= 8) {
+                error.style.display = 'none';
+            }
+        });
+
+        document.getElementById('confirmPassword').addEventListener('input', function() {
+            const password = document.getElementById('password').value;
+            const error = document.getElementById('confirmPasswordError');
+            if (this.value === password) {
+                error.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
