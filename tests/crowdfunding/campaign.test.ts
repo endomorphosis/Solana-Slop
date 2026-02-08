@@ -316,4 +316,244 @@ describe("crowdfunding campaign", () => {
     // Completing second invoice should fail because funds are now insufficient
     expect(() => campaign.approveInvoicePayment(pubkey(client), "INV-002", 90, pubkey(attorney))).toThrow(/Insufficient funds/);
   });
+
+  describe("appeal system", () => {
+    it("allows recording win outcome and depositing court awards", () => {
+      const clock = new FakeClock(11_000);
+      const campaign = new Campaign(
+        {
+          id: "case-011",
+          minRaiseLamports: 100,
+          deadlineUnix: 11_100,
+          refundWindowStartUnix: 11_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(11_200);
+      campaign.evaluate();
+
+      expect(campaign.getStatus()).toBe("locked");
+
+      // Record win with judgment
+      campaign.recordOutcome("win", 200);
+      expect(campaign.getStatus()).toBe("won");
+      expect(campaign.getOutcome()).toBe("win");
+      expect(campaign.getJudgmentAmount()).toBe(200);
+
+      // Attorney deposits court award
+      campaign.depositCourtAward(pubkey(attorney), 200);
+      expect(campaign.getCourtFeesDeposited()).toBe(200);
+    });
+
+    it("allows recording loss outcome and paying judgment", () => {
+      const clock = new FakeClock(12_000);
+      const campaign = new Campaign(
+        {
+          id: "case-012",
+          minRaiseLamports: 100,
+          deadlineUnix: 12_100,
+          refundWindowStartUnix: 12_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 200);
+      clock.set(12_200);
+      campaign.evaluate();
+
+      expect(campaign.getStatus()).toBe("locked");
+
+      // Record loss with judgment
+      campaign.recordOutcome("loss", 50);
+      expect(campaign.getStatus()).toBe("lost");
+      expect(campaign.getOutcome()).toBe("loss");
+      expect(campaign.getJudgmentAmount()).toBe(50);
+
+      // Pay judgment
+      campaign.payJudgment(50);
+      expect(campaign.getInvoicePayments()).toHaveLength(1);
+      expect(campaign.getInvoicePayments()[0].recipient).toBe("court");
+    });
+
+    it("requires only 1/3 approval for appeal after win", () => {
+      const clock = new FakeClock(13_000);
+      const campaign = new Campaign(
+        {
+          id: "case-013",
+          minRaiseLamports: 100,
+          deadlineUnix: 13_100,
+          refundWindowStartUnix: 13_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(13_200);
+      campaign.evaluate();
+      campaign.recordOutcome("win", 100);
+
+      expect(campaign.getStatus()).toBe("won");
+
+      // Single signer can initiate appeal after win
+      campaign.approveAppeal(pubkey(attorney), 200, 14_000);
+      
+      expect(campaign.getStatus()).toBe("appeal_active");
+      expect(campaign.getCurrentRound()).toBe(2);
+      expect(campaign.getAppealRounds()).toHaveLength(1);
+      expect(campaign.getAppealRounds()[0].roundNumber).toBe(2);
+      expect(campaign.getAppealRounds()[0].previousOutcome).toBe("win");
+    });
+
+    it("requires 2/3 approval for appeal after loss", () => {
+      const clock = new FakeClock(14_000);
+      const campaign = new Campaign(
+        {
+          id: "case-014",
+          minRaiseLamports: 100,
+          deadlineUnix: 14_100,
+          refundWindowStartUnix: 14_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(14_200);
+      campaign.evaluate();
+      campaign.recordOutcome("loss", 50);
+
+      expect(campaign.getStatus()).toBe("lost");
+
+      // First approval
+      campaign.approveAppeal(pubkey(attorney), 200, 15_000);
+      expect(campaign.getStatus()).toBe("lost"); // Still lost, need 2
+
+      // Second approval triggers appeal
+      campaign.approveAppeal(pubkey(platform), 200, 15_000);
+      expect(campaign.getStatus()).toBe("appeal_active");
+      expect(campaign.getCurrentRound()).toBe(2);
+    });
+
+    it("allows contributions to appeal round", () => {
+      const clock = new FakeClock(15_000);
+      const campaign = new Campaign(
+        {
+          id: "case-015",
+          minRaiseLamports: 100,
+          deadlineUnix: 15_100,
+          refundWindowStartUnix: 15_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(15_200);
+      campaign.evaluate();
+      campaign.recordOutcome("win");
+
+      // Initiate appeal (1/3 for win)
+      campaign.approveAppeal(pubkey(attorney), 200, 16_000);
+      expect(campaign.getStatus()).toBe("appeal_active");
+
+      // Contribute to appeal
+      campaign.contributeToAppeal(pubkey(funderB), 100);
+      campaign.contributeToAppeal(pubkey(funderA), 120);
+      
+      expect(campaign.getAppealRounds()[0].totalRaised).toBe(220);
+    });
+
+    it("evaluates successful appeal round", () => {
+      const clock = new FakeClock(16_000);
+      const campaign = new Campaign(
+        {
+          id: "case-016",
+          minRaiseLamports: 100,
+          deadlineUnix: 16_100,
+          refundWindowStartUnix: 16_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(16_200);
+      campaign.evaluate();
+      campaign.recordOutcome("win");
+
+      // Initiate and fund appeal
+      campaign.approveAppeal(pubkey(attorney), 200, 17_000);
+      campaign.contributeToAppeal(pubkey(funderB), 250);
+
+      clock.set(17_100);
+      campaign.evaluateAppeal();
+
+      expect(campaign.getStatus()).toBe("locked");
+      expect(campaign.getDaoFeeAmount()).toBe(40); // 15 from first round + 25 from appeal
+    });
+
+    it("refunds if appeal round fails to meet goal", () => {
+      const clock = new FakeClock(17_000);
+      const campaign = new Campaign(
+        {
+          id: "case-017",
+          minRaiseLamports: 100,
+          deadlineUnix: 17_100,
+          refundWindowStartUnix: 17_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(17_200);
+      campaign.evaluate();
+      campaign.recordOutcome("win");
+
+      // Initiate appeal but fail to meet goal
+      campaign.approveAppeal(pubkey(attorney), 200, 18_000);
+      campaign.contributeToAppeal(pubkey(funderB), 100); // Only 100, need 200
+
+      clock.set(18_100);
+      campaign.evaluateAppeal();
+
+      expect(campaign.getStatus()).toBe("failed_refunding");
+      expect(campaign.getRefundReason()).toBe("auto_failed");
+    });
+
+    it("records settlement outcome", () => {
+      const clock = new FakeClock(18_000);
+      const campaign = new Campaign(
+        {
+          id: "case-018",
+          minRaiseLamports: 100,
+          deadlineUnix: 18_100,
+          refundWindowStartUnix: 18_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(18_200);
+      campaign.evaluate();
+
+      campaign.recordOutcome("settlement");
+      expect(campaign.getStatus()).toBe("settled");
+      expect(campaign.getOutcome()).toBe("settlement");
+    });
+  });
 });

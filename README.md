@@ -36,6 +36,7 @@ The repo includes a domain-level test suite that models:
 - **10% DAO treasury fee** deducted automatically on successful fundraising campaigns
 - **Attorney court fee deposits**: Attorney can unilaterally deposit court-awarded fees into the campaign
 - **Invoice payment approvals**: 2-of-3 multisig signers can approve payments to attorney for services rendered
+- **Appeal system**: Multi-round fundraising with different approval thresholds based on case outcome
 
 #### DAO Treasury Fee
 Upon a successful raise (meeting the minimum goal by the deadline), a 10% fee is automatically deducted and allocated to the DAO treasury for platform maintenance and administration. This ensures sustainable operation of the crowdfunding platform.
@@ -45,6 +46,34 @@ When a court awards fees to the campaign, the attorney (first multisig signer) c
 
 #### Invoice Payment System
 When the attorney provides an invoice for services rendered, any 2-of-3 multisig signers (attorney, platform, client) can approve payment from the campaign funds to the attorney's wallet. This provides a transparent and secure mechanism for paying for legal services while requiring consensus from the multisig participants.
+
+#### Appeal System
+The crowdfunding platform supports multi-round fundraising for legal appeals with intelligent approval mechanisms based on case outcomes:
+
+**Case Outcomes:**
+- **Settlement**: Case is resolved through agreement between parties
+- **Win**: Campaign wins the case, potentially receiving court-awarded funds
+- **Loss**: Campaign loses the case, potentially owing judgment payments
+
+**Appeal Mechanics:**
+
+After a **Win**:
+- Only **1 of 3** multisig signers is required to approve an appeal
+- Court-awarded funds (judgment, attorney fees) can be deposited by the attorney
+- Lower threshold reflects that winning party has less risk in appealing
+
+After a **Loss**:
+- **2 of 3** multisig signers are required to approve an appeal
+- Must pay judgment from existing campaign funds
+- Additional community fundraising needed for appeal costs
+- Higher threshold reflects greater risk and financial burden
+
+**Multi-Round Fundraising:**
+- Each appeal round tracks contributions separately
+- 10% DAO fee is collected on each successful round
+- If appeal funding fails to meet the minimum, automatic refunds are issued
+- Original contributors are diluted by appeal round participants
+- Each round maintains full audit trail of approvals and contributions
 
 Run the crowdfunding unit tests with:
 ```bash

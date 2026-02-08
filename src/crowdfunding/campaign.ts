@@ -5,10 +5,14 @@ import type {
   Clock,
   PublicKeyLike,
   RefundReason,
-  InvoicePayment
+  InvoicePayment,
+  CampaignOutcome,
+  AppealRound
 } from "./types.js";
 
 const APPROVAL_THRESHOLD = 2;
+const WIN_APPEAL_THRESHOLD = 1; // Only 1 signer needed for win appeal
+const LOSS_APPEAL_THRESHOLD = 2; // 2 signers needed for loss appeal
 /** Platform fee percentage (10%) deducted from successful campaigns and allocated to DAO treasury */
 const DAO_FEE_PERCENT = 0.10;
 
@@ -26,6 +30,11 @@ export class Campaign {
   private readonly invoicePayments: InvoicePayment[] = [];
   private readonly pendingInvoiceApprovals = new Map<string, Set<PublicKeyLike>>();
   private readonly pendingInvoiceDetails = new Map<string, { amount: number; recipient: PublicKeyLike }>();
+  private outcome: CampaignOutcome | null = null;
+  private readonly appealRounds: AppealRound[] = [];
+  private currentRound = 1;
+  private readonly appealApprovals = new Set<PublicKeyLike>();
+  private judgmentAmount = 0;
 
   constructor(config: CampaignConfig, clock: Clock) {
     if (config.signers.length !== 3) {
@@ -230,5 +239,175 @@ export class Campaign {
 
   getInvoiceApprovals(invoiceId: string): PublicKeyLike[] {
     return Array.from(this.pendingInvoiceApprovals.get(invoiceId) ?? []);
+  }
+
+  getOutcome(): CampaignOutcome | null {
+    return this.outcome;
+  }
+
+  getCurrentRound(): number {
+    return this.currentRound;
+  }
+
+  getAppealRounds(): AppealRound[] {
+    return [...this.appealRounds];
+  }
+
+  getAppealApprovals(): PublicKeyLike[] {
+    return Array.from(this.appealApprovals);
+  }
+
+  getJudgmentAmount(): number {
+    return this.judgmentAmount;
+  }
+
+  /**
+   * Record the outcome of the case (settlement, win, or loss)
+   */
+  recordOutcome(outcome: CampaignOutcome, judgmentAmount?: number): void {
+    if (this.status !== "locked") {
+      throw new CampaignError("Can only record outcome for locked campaigns");
+    }
+    
+    this.outcome = outcome;
+    
+    if (outcome === "settlement") {
+      this.status = "settled";
+    } else if (outcome === "win") {
+      this.status = "won";
+      if (judgmentAmount !== undefined && judgmentAmount > 0) {
+        this.judgmentAmount = judgmentAmount;
+      }
+    } else if (outcome === "loss") {
+      this.status = "lost";
+      if (judgmentAmount !== undefined && judgmentAmount > 0) {
+        this.judgmentAmount = judgmentAmount;
+      }
+    }
+  }
+
+  /**
+   * Deposit court-awarded funds after a win
+   */
+  depositCourtAward(depositor: PublicKeyLike, amount: number): void {
+    if (this.status !== "won") {
+      throw new CampaignError("Can only deposit court awards after a win");
+    }
+    // Only attorney (first signer) can deposit court awards
+    if (depositor !== this.config.signers[0]) {
+      throw new CampaignError("Only attorney can deposit court awards");
+    }
+    if (amount <= 0) {
+      throw new CampaignError("Court award amount must be > 0");
+    }
+    this.courtFeesDeposited += amount;
+  }
+
+  /**
+   * Pay judgment amount after a loss
+   */
+  payJudgment(amount: number): void {
+    if (this.status !== "lost") {
+      throw new CampaignError("Can only pay judgment after a loss");
+    }
+    if (amount <= 0) {
+      throw new CampaignError("Judgment payment amount must be > 0");
+    }
+    if (this.getAvailableFunds() < amount) {
+      throw new CampaignError("Insufficient funds to pay judgment");
+    }
+    
+    // Record as a special invoice payment
+    this.invoicePayments.push({
+      invoiceId: `JUDGMENT-${this.clock.now()}`,
+      amount,
+      recipient: "court",
+      approvers: [] // System payment
+    });
+  }
+
+  /**
+   * Approve an appeal (different thresholds for win vs loss)
+   * Win appeal: requires 1/3 approval
+   * Loss appeal: requires 2/3 approval
+   */
+  approveAppeal(approver: PublicKeyLike, minRaiseLamports: number, deadlineUnix: number): void {
+    if (this.status !== "won" && this.status !== "lost") {
+      throw new CampaignError("Can only approve appeal after win or loss");
+    }
+    if (!this.config.signers.includes(approver)) {
+      throw new CampaignError("Approver is not a multisig signer");
+    }
+    if (minRaiseLamports <= 0) {
+      throw new CampaignError("Appeal raise target must be > 0");
+    }
+    if (deadlineUnix <= this.clock.now()) {
+      throw new CampaignError("Appeal deadline must be in the future");
+    }
+
+    this.appealApprovals.add(approver);
+
+    const requiredApprovals = this.status === "won" ? WIN_APPEAL_THRESHOLD : LOSS_APPEAL_THRESHOLD;
+    
+    if (this.appealApprovals.size >= requiredApprovals) {
+      // Initialize appeal round
+      this.appealRounds.push({
+        roundNumber: this.currentRound + 1,
+        minRaiseLamports,
+        deadlineUnix,
+        totalRaised: 0,
+        previousOutcome: this.outcome!
+      });
+      this.currentRound++;
+      this.status = "appeal_active";
+      this.appealApprovals.clear();
+    }
+  }
+
+  /**
+   * Contribute to current appeal round
+   */
+  contributeToAppeal(funder: PublicKeyLike, lamports: number): void {
+    if (this.status !== "appeal_active") {
+      throw new CampaignError("Campaign is not accepting appeal contributions");
+    }
+    
+    const currentAppealRound = this.appealRounds[this.appealRounds.length - 1];
+    if (!currentAppealRound) {
+      throw new CampaignError("No active appeal round");
+    }
+    
+    if (this.clock.now() >= currentAppealRound.deadlineUnix) {
+      throw new CampaignError("Appeal deadline has passed");
+    }
+    if (lamports <= 0) {
+      throw new CampaignError("Contribution must be > 0");
+    }
+
+    const prev = this.contributions.get(funder) ?? 0;
+    this.contributions.set(funder, prev + lamports);
+    currentAppealRound.totalRaised += lamports;
+  }
+
+  /**
+   * Evaluate appeal round
+   */
+  evaluateAppeal(): void {
+    if (this.status !== "appeal_active") return;
+
+    const currentAppealRound = this.appealRounds[this.appealRounds.length - 1];
+    if (!currentAppealRound) return;
+
+    if (this.clock.now() >= currentAppealRound.deadlineUnix) {
+      if (currentAppealRound.totalRaised < currentAppealRound.minRaiseLamports) {
+        // Appeal funding failed
+        this.openRefund("auto_failed");
+        this.status = "failed_refunding";
+        return;
+      }
+      // Appeal funding succeeded
+      this.daoFeeAmount += Math.floor(currentAppealRound.totalRaised * DAO_FEE_PERCENT);
+      this.status = "locked";
+    }
   }
 }
