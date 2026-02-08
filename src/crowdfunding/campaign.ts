@@ -24,6 +24,7 @@ export class Campaign {
   private courtFeesDeposited = 0;
   private readonly invoicePayments: InvoicePayment[] = [];
   private readonly pendingInvoiceApprovals = new Map<string, Set<PublicKeyLike>>();
+  private readonly pendingInvoiceDetails = new Map<string, { amount: number; recipient: PublicKeyLike }>();
 
   constructor(config: CampaignConfig, clock: Clock) {
     if (config.signers.length !== 3) {
@@ -181,17 +182,40 @@ export class Campaign {
     if (amount <= 0) {
       throw new CampaignError("Invoice amount must be > 0");
     }
-    if (this.getAvailableFunds() < amount) {
-      throw new CampaignError("Insufficient funds for invoice payment");
+
+    // Check if this invoice already has approvals and validate consistency
+    const existingDetails = this.pendingInvoiceDetails.get(invoiceId);
+    if (existingDetails) {
+      // Ensure amount and recipient are consistent with first approval
+      if (existingDetails.amount !== amount || existingDetails.recipient !== recipient) {
+        throw new CampaignError("Invoice amount and recipient must match existing approvals");
+      }
+    } else {
+      // First approval - check available funds and store details
+      if (this.getAvailableFunds() < amount) {
+        throw new CampaignError("Insufficient funds for invoice payment");
+      }
+      this.pendingInvoiceDetails.set(invoiceId, { amount, recipient });
     }
 
     if (!this.pendingInvoiceApprovals.has(invoiceId)) {
       this.pendingInvoiceApprovals.set(invoiceId, new Set());
     }
     const approvals = this.pendingInvoiceApprovals.get(invoiceId)!;
+    
+    // Prevent double approval by same signer
+    if (approvals.has(approver)) {
+      throw new CampaignError("Approver has already approved this invoice");
+    }
+    
     approvals.add(approver);
 
     if (approvals.size >= APPROVAL_THRESHOLD) {
+      // Double-check funds are still available before payment
+      if (this.getAvailableFunds() < amount) {
+        throw new CampaignError("Insufficient funds for invoice payment");
+      }
+      
       this.invoicePayments.push({
         invoiceId,
         amount,
@@ -199,6 +223,7 @@ export class Campaign {
         approvers: Array.from(approvals)
       });
       this.pendingInvoiceApprovals.delete(invoiceId);
+      this.pendingInvoiceDetails.delete(invoiceId);
     }
   }
 

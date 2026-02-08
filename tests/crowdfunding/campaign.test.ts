@@ -230,4 +230,90 @@ describe("crowdfunding campaign", () => {
     // Try to approve payment exceeding available funds
     expect(() => campaign.approveInvoicePayment(pubkey(attorney), "INV-001", 100, pubkey(attorney))).toThrow(/Insufficient funds/);
   });
+
+  it("prevents double approval of same invoice by same signer", () => {
+    const clock = new FakeClock(8_000);
+    const campaign = new Campaign(
+      {
+        id: "case-008",
+        minRaiseLamports: 100,
+        deadlineUnix: 8_100,
+        refundWindowStartUnix: 8_400,
+        signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+        daoTreasury: pubkey(daoTreasury)
+      },
+      clock
+    );
+
+    campaign.contribute(pubkey(funderA), 200);
+    clock.set(8_200);
+    campaign.evaluate();
+
+    campaign.approveInvoicePayment(pubkey(attorney), "INV-001", 50, pubkey(attorney));
+    
+    // Second approval by same signer should fail
+    expect(() => campaign.approveInvoicePayment(pubkey(attorney), "INV-001", 50, pubkey(attorney))).toThrow(/already approved/);
+  });
+
+  it("enforces consistent invoice parameters across approvals", () => {
+    const clock = new FakeClock(9_000);
+    const campaign = new Campaign(
+      {
+        id: "case-009",
+        minRaiseLamports: 100,
+        deadlineUnix: 9_100,
+        refundWindowStartUnix: 9_400,
+        signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+        daoTreasury: pubkey(daoTreasury)
+      },
+      clock
+    );
+
+    campaign.contribute(pubkey(funderA), 200);
+    clock.set(9_200);
+    campaign.evaluate();
+
+    // First approval with specific amount
+    campaign.approveInvoicePayment(pubkey(attorney), "INV-001", 50, pubkey(attorney));
+    
+    // Second approval with different amount should fail
+    expect(() => campaign.approveInvoicePayment(pubkey(platform), "INV-001", 60, pubkey(attorney))).toThrow(/must match existing approvals/);
+    
+    // Second approval with different recipient should fail
+    expect(() => campaign.approveInvoicePayment(pubkey(platform), "INV-001", 50, pubkey(platform))).toThrow(/must match existing approvals/);
+  });
+
+  it("rechecks available funds before finalizing invoice payment", () => {
+    const clock = new FakeClock(10_000);
+    const campaign = new Campaign(
+      {
+        id: "case-010",
+        minRaiseLamports: 100,
+        deadlineUnix: 10_100,
+        refundWindowStartUnix: 10_400,
+        signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+        daoTreasury: pubkey(daoTreasury)
+      },
+      clock
+    );
+
+    campaign.contribute(pubkey(funderA), 200);
+    clock.set(10_200);
+    campaign.evaluate();
+
+    expect(campaign.getAvailableFunds()).toBe(180); // 200 - 20 (fee)
+
+    // First invoice approval for 100
+    campaign.approveInvoicePayment(pubkey(attorney), "INV-001", 100, pubkey(attorney));
+    
+    // Second invoice approval for 90 (should succeed, total pending = 190)
+    campaign.approveInvoicePayment(pubkey(platform), "INV-002", 90, pubkey(attorney));
+    
+    // Complete first invoice (reduces available funds to 80)
+    campaign.approveInvoicePayment(pubkey(client), "INV-001", 100, pubkey(attorney));
+    expect(campaign.getAvailableFunds()).toBe(80); // 180 - 100
+    
+    // Completing second invoice should fail because funds are now insufficient
+    expect(() => campaign.approveInvoicePayment(pubkey(client), "INV-002", 90, pubkey(attorney))).toThrow(/Insufficient funds/);
+  });
 });
