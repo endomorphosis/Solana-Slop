@@ -483,7 +483,7 @@ const ucanToken = portal.createUCANToken(
   "john_doe",
   "did:key:attorney_public_key",
   [{ resource: doc.id, access: "read" }],
-  7 * 24 * 60 * 60 * 1000 // 7 days
+  7 * 24 * 60 * 60 // 7 days (in seconds)
 );
 
 // Create complaint
