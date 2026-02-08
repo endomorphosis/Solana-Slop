@@ -37,7 +37,8 @@ export class Campaign {
   private readonly appealRounds: AppealRound[] = [];
   private currentRound = 1;
   private readonly appealApprovals = new Set<PublicKeyLike>();
-  private pendingAppealDetails: { estimatedCost: number; deadlineUnix: number; courtLevel: CourtLevel; path: LitigationPath } | null = null;
+  /** Stores parameters from first appeal approval to enforce consistency across subsequent approvals */
+  private firstAppealApprovalParams: { estimatedCost: number; deadlineUnix: number; courtLevel: CourtLevel; path: LitigationPath } | null = null;
   private judgmentAmount = 0;
   private readonly appealContributionsByRound = new Map<number, Map<PublicKeyLike, number>>();
 
@@ -366,23 +367,23 @@ export class Campaign {
     
     // Check if this is the first approval for this appeal
     if (this.appealApprovals.size === 0) {
-      // Store pending appeal details on first approval
-      this.pendingAppealDetails = { estimatedCost, deadlineUnix, courtLevel, path };
+      // Store parameters from first approval for consistency validation
+      this.firstAppealApprovalParams = { estimatedCost, deadlineUnix, courtLevel, path };
     } else {
       // Enforce parameter consistency on subsequent approvals
-      if (!this.pendingAppealDetails) {
-        throw new CampaignError("Internal error: no pending appeal details");
+      if (!this.firstAppealApprovalParams) {
+        throw new CampaignError("Internal error: no first appeal approval parameters");
       }
-      if (this.pendingAppealDetails.estimatedCost !== estimatedCost) {
+      if (this.firstAppealApprovalParams.estimatedCost !== estimatedCost) {
         throw new CampaignError("Appeal estimated cost does not match first approval");
       }
-      if (this.pendingAppealDetails.deadlineUnix !== deadlineUnix) {
+      if (this.firstAppealApprovalParams.deadlineUnix !== deadlineUnix) {
         throw new CampaignError("Appeal deadline does not match first approval");
       }
-      if (this.pendingAppealDetails.courtLevel !== courtLevel) {
+      if (this.firstAppealApprovalParams.courtLevel !== courtLevel) {
         throw new CampaignError("Appeal court level does not match first approval");
       }
-      if (this.pendingAppealDetails.path !== path) {
+      if (this.firstAppealApprovalParams.path !== path) {
         throw new CampaignError("Appeal path does not match first approval");
       }
     }
@@ -422,7 +423,7 @@ export class Campaign {
       }
       
       this.appealApprovals.clear();
-      this.pendingAppealDetails = null;
+      this.firstAppealApprovalParams = null;
     }
   }
 
