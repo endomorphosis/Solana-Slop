@@ -37,7 +37,9 @@ export class Campaign {
   private readonly appealRounds: AppealRound[] = [];
   private currentRound = 1;
   private readonly appealApprovals = new Set<PublicKeyLike>();
+  private pendingAppealDetails: { estimatedCost: number; deadlineUnix: number; courtLevel: CourtLevel; path: LitigationPath } | null = null;
   private judgmentAmount = 0;
+  private readonly appealContributionsByRound = new Map<number, Map<PublicKeyLike, number>>();
 
   constructor(config: CampaignConfig, clock: Clock) {
     if (config.signers.length !== 3) {
@@ -59,7 +61,14 @@ export class Campaign {
 
   getTotalRaised(): number {
     let total = 0;
+    // Sum initial round contributions
     for (const amount of this.contributions.values()) total += amount;
+    // Sum all appeal round contributions
+    for (const roundContributions of this.appealContributionsByRound.values()) {
+      for (const amount of roundContributions.values()) {
+        total += amount;
+      }
+    }
     return total;
   }
 
@@ -266,6 +275,7 @@ export class Campaign {
 
   /**
    * Record the outcome of the case (settlement, win, or loss)
+   * Always sets judgmentAmount deterministically (defaults to 0 if not provided)
    */
   recordOutcome(outcome: CampaignOutcome, judgmentAmount?: number): void {
     if (this.status !== "locked") {
@@ -274,10 +284,9 @@ export class Campaign {
     
     this.outcome = outcome;
     
-    // Set judgment amount if provided and positive
-    if (judgmentAmount !== undefined && judgmentAmount > 0) {
-      this.judgmentAmount = judgmentAmount;
-    }
+    // Always set judgment amount deterministically (0 if not provided or 0 explicitly)
+    // This ensures remands/technical losses with 0 judgment properly clear prior values
+    this.judgmentAmount = judgmentAmount ?? 0;
     
     if (outcome === "settlement") {
       this.status = "settled";
@@ -333,6 +342,7 @@ export class Campaign {
    * Win appeal: requires 1/3 approval
    * Loss appeal: requires 2/3 approval
    * Only initiates fundraising if insufficient funds available
+   * Enforces parameter consistency across approvals (similar to invoice payments)
    */
   approveAppeal(
     approver: PublicKeyLike, 
@@ -352,6 +362,34 @@ export class Campaign {
     }
     if (deadlineUnix <= this.clock.now()) {
       throw new CampaignError("Appeal deadline must be in the future");
+    }
+    
+    // Check if this is the first approval for this appeal
+    if (this.appealApprovals.size === 0) {
+      // Store pending appeal details on first approval
+      this.pendingAppealDetails = { estimatedCost, deadlineUnix, courtLevel, path };
+    } else {
+      // Enforce parameter consistency on subsequent approvals
+      if (!this.pendingAppealDetails) {
+        throw new CampaignError("Internal error: no pending appeal details");
+      }
+      if (this.pendingAppealDetails.estimatedCost !== estimatedCost) {
+        throw new CampaignError("Appeal estimated cost does not match first approval");
+      }
+      if (this.pendingAppealDetails.deadlineUnix !== deadlineUnix) {
+        throw new CampaignError("Appeal deadline does not match first approval");
+      }
+      if (this.pendingAppealDetails.courtLevel !== courtLevel) {
+        throw new CampaignError("Appeal court level does not match first approval");
+      }
+      if (this.pendingAppealDetails.path !== path) {
+        throw new CampaignError("Appeal path does not match first approval");
+      }
+    }
+    
+    // Check for double approval
+    if (this.appealApprovals.has(approver)) {
+      throw new CampaignError("Approver has already approved this appeal");
     }
 
     this.appealApprovals.add(approver);
@@ -384,11 +422,13 @@ export class Campaign {
       }
       
       this.appealApprovals.clear();
+      this.pendingAppealDetails = null;
     }
   }
 
   /**
    * Contribute to current appeal round
+   * Tracks contributions separately per appeal round to enable per-round refunds
    */
   contributeToAppeal(funder: PublicKeyLike, lamports: number): void {
     if (this.status !== "appeal_active") {
@@ -407,8 +447,15 @@ export class Campaign {
       throw new CampaignError("Contribution must be > 0");
     }
 
-    const prev = this.contributions.get(funder) ?? 0;
-    this.contributions.set(funder, prev + lamports);
+    // Track appeal contributions separately from initial-round contributions
+    let roundContributions = this.appealContributionsByRound.get(currentAppealRound.roundNumber);
+    if (!roundContributions) {
+      roundContributions = new Map<PublicKeyLike, number>();
+      this.appealContributionsByRound.set(currentAppealRound.roundNumber, roundContributions);
+    }
+
+    const prev = roundContributions.get(funder) ?? 0;
+    roundContributions.set(funder, prev + lamports);
     currentAppealRound.totalRaised += lamports;
   }
 

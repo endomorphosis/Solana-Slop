@@ -69,15 +69,100 @@ After a **Loss**:
 - Higher threshold reflects greater risk and financial burden
 
 **Multi-Round Fundraising:**
-- Each appeal round tracks contributions separately
+- Each appeal round tracks contributions separately from initial round
+- Appeal contributions are isolated to prevent refund accounting issues
 - 10% DAO fee is collected on each successful round
 - If appeal funding fails to meet the minimum, automatic refunds are issued
 - Original contributors are diluted by appeal round participants
 - Each round maintains full audit trail of approvals and contributions
 
+**Conditional Fundraising:**
+- Appeals intelligently check available campaign funds before initiating fundraising
+- If wallet has sufficient funds (≥ estimated cost), appeal proceeds directly without fundraising
+- If insufficient funds, fundraising starts for only the needed difference
+- Reduces unnecessary fundraising rounds and gas costs
+
+**Multi-Level Court Hierarchy:**
+- Supports multiple court levels: district, appellate, state_supreme, us_supreme
+- Litigation paths: appeal, remand, retrial, final
+- Models real-world legal proceedings spanning multiple jurisdictions over many years
+- Each appeal round tracks court level and path for audit purposes
+
+**Appeal Parameter Consistency:**
+- First approval establishes appeal parameters (cost, deadline, court level, path)
+- Subsequent approvals must match the initial parameters exactly
+- Prevents race conditions where different signers approve different terms
+- Similar to invoice payment consistency enforcement
+
+**Judgment Amount Handling:**
+- `recordOutcome()` always sets judgment amount deterministically
+- Passing 0 or undefined properly clears any prior judgment value
+- Critical for remands and technical losses with no monetary judgment
+- Prevents stale judgment amounts from affecting future calculations
+
+**Comprehensive Testing:**
+- 31 unit tests covering all features and edge cases
+- 102 JSON scenario files simulating real-world litigation trajectories
+- Boundary value testing with extreme amounts and timings
+- Fuzz testing to validate robustness over decade-long cases
+- No Solana blockchain dependency for scenario tests
+
 Run the crowdfunding unit tests with:
 ```bash
 npm test
+```
+
+### API Examples
+
+#### Basic Campaign Flow
+```typescript
+// Create campaign
+const campaign = new Campaign(config, clock);
+
+// Contributors fund the campaign
+campaign.contribute(funder1, 1000);
+campaign.contribute(funder2, 2000);
+
+// Evaluate after deadline
+campaign.evaluate(); // Status: "locked" if goal met
+
+// Record outcome
+campaign.recordOutcome("win", 50000);
+
+// Attorney deposits court award
+campaign.depositCourtAward(attorney, 50000);
+```
+
+#### Invoice Payment Flow
+```typescript
+// 2-of-3 multisig invoice payment
+campaign.approveInvoicePayment(attorney, "INV-001", 5000, attorneyWallet);
+campaign.approveInvoicePayment(platform, "INV-001", 5000, attorneyWallet);
+// Payment executes on second approval
+```
+
+#### Appeal with Sufficient Funds
+```typescript
+campaign.recordOutcome("win", 100000);
+campaign.depositCourtAward(attorney, 100000);
+
+// Available funds > estimated cost - no fundraising needed
+campaign.approveAppeal(attorney, 50000, deadline, "appellate", "appeal");
+// Status immediately goes to "locked"
+```
+
+#### Appeal Requiring Fundraising
+```typescript
+campaign.recordOutcome("loss", 30000);
+campaign.payJudgment(30000);
+
+// Insufficient funds - requires 2/3 approval for loss appeal
+campaign.approveAppeal(attorney, 100000, deadline, "appellate", "appeal");
+campaign.approveAppeal(platform, 100000, deadline, "appellate", "appeal");
+// Status goes to "appeal_active" - fundraising needed
+
+campaign.contributeToAppeal(funder, 80000);
+campaign.evaluateAppeal(); // Checks if minimum reached
 ```
 
 ## Ping Solana testnet

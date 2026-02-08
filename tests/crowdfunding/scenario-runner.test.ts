@@ -1,9 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
+import { resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Campaign } from "../../src/crowdfunding/campaign.js";
 import { makeKeypair, pubkey } from "../helpers/participants.js";
 import { CourtLevel, LitigationPath } from "../../src/crowdfunding/types.js";
+
+// ESM-compatible directory resolution
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class FakeClock {
   private nowUnix: number;

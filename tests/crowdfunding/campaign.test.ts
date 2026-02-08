@@ -593,5 +593,236 @@ describe("crowdfunding campaign", () => {
       expect(campaign.getStatus()).toBe("settled");
       expect(campaign.getOutcome()).toBe("settlement");
     });
+
+    it("clears judgment amount when recording outcome with zero judgment", () => {
+      const clock = new FakeClock(20_000);
+      const campaign = new Campaign(
+        {
+          id: "case-019",
+          minRaiseLamports: 100,
+          deadlineUnix: 20_100,
+          refundWindowStartUnix: 20_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(20_150); // After contribute but before deadline
+      campaign.evaluate();
+
+      // Record initial loss with judgment
+      campaign.recordOutcome("loss", 100);
+      expect(campaign.getJudgmentAmount()).toBe(100);
+      
+      // Verify that explicitly passing 0 clears the judgment
+      // Create a new campaign to test with explicit 0
+      const campaign2 = new Campaign(
+        {
+          id: "case-019b",
+          minRaiseLamports: 100,
+          deadlineUnix: 20_100,
+          refundWindowStartUnix: 20_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+      clock.set(20_000);
+      campaign2.contribute(pubkey(funderA), 150);
+      clock.set(20_150);
+      campaign2.evaluate();
+      
+      // Record outcome with explicit 0 judgment
+      campaign2.recordOutcome("loss", 0);
+      expect(campaign2.getJudgmentAmount()).toBe(0);
+      
+      // Record outcome with undefined judgment (should also be 0)
+      const campaign3 = new Campaign(
+        {
+          id: "case-019c",
+          minRaiseLamports: 100,
+          deadlineUnix: 20_100,
+          refundWindowStartUnix: 20_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+      clock.set(20_000);
+      campaign3.contribute(pubkey(funderA), 150);
+      clock.set(20_150);
+      campaign3.evaluate();
+      campaign3.recordOutcome("settlement"); // no judgment
+      expect(campaign3.getJudgmentAmount()).toBe(0);
+    });
+
+    it("enforces appeal parameter consistency across approvals", () => {
+      const clock = new FakeClock(21_000);
+      const campaign = new Campaign(
+        {
+          id: "case-020",
+          minRaiseLamports: 100,
+          deadlineUnix: 21_100,
+          refundWindowStartUnix: 21_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(21_100); // At deadline to lock the campaign
+      campaign.evaluate();
+      campaign.recordOutcome("loss", 50);
+      campaign.payJudgment(50);
+
+      // First approval with specific parameters
+      campaign.approveAppeal(pubkey(attorney), 200, 22_000, "appellate", "appeal");
+
+      // Second approval with different estimated cost should fail
+      expect(() => {
+        campaign.approveAppeal(pubkey(platform), 300, 22_000, "appellate", "appeal");
+      }).toThrow("Appeal estimated cost does not match first approval");
+
+      // Reset for deadline test
+      const campaign2 = new Campaign(
+        {
+          id: "case-020b",
+          minRaiseLamports: 100,
+          deadlineUnix: 21_100,
+          refundWindowStartUnix: 21_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+      clock.set(21_000);
+      campaign2.contribute(pubkey(funderA), 150);
+      clock.set(21_100);
+      campaign2.evaluate();
+      campaign2.recordOutcome("loss", 50);
+      campaign2.payJudgment(50);
+
+      campaign2.approveAppeal(pubkey(attorney), 200, 22_000, "appellate", "appeal");
+
+      // Second approval with different deadline should fail
+      expect(() => {
+        campaign2.approveAppeal(pubkey(platform), 200, 23_000, "appellate", "appeal");
+      }).toThrow("Appeal deadline does not match first approval");
+    });
+
+    it("prevents double approval for appeals", () => {
+      const clock = new FakeClock(22_000);
+      const campaign = new Campaign(
+        {
+          id: "case-021",
+          minRaiseLamports: 100,
+          deadlineUnix: 22_100,
+          refundWindowStartUnix: 22_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 150);
+      clock.set(22_200);
+      campaign.evaluate();
+      campaign.recordOutcome("loss", 50);
+      campaign.payJudgment(50);
+
+      // First approval
+      campaign.approveAppeal(pubkey(attorney), 200, 23_000, "appellate", "appeal");
+
+      // Same approver tries to approve again
+      expect(() => {
+        campaign.approveAppeal(pubkey(attorney), 200, 23_000, "appellate", "appeal");
+      }).toThrow("Approver has already approved this appeal");
+    });
+
+    it("tracks appeal contributions separately from initial contributions", () => {
+      const clock = new FakeClock(23_000);
+      const campaign = new Campaign(
+        {
+          id: "case-022",
+          minRaiseLamports: 100,
+          deadlineUnix: 23_100,
+          refundWindowStartUnix: 23_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      // Initial round contributions
+      campaign.contribute(pubkey(funderA), 150);
+      const initialTotal = campaign.getTotalRaised();
+      expect(initialTotal).toBe(150);
+
+      clock.set(23_200);
+      campaign.evaluate();
+      campaign.recordOutcome("loss", 50);
+      campaign.payJudgment(50);
+
+      // Start appeal round
+      campaign.approveAppeal(pubkey(attorney), 200, 24_000, "appellate", "appeal");
+      campaign.approveAppeal(pubkey(platform), 200, 24_000, "appellate", "appeal");
+
+      expect(campaign.getStatus()).toBe("appeal_active");
+
+      // Appeal round contributions
+      campaign.contributeToAppeal(pubkey(funderB), 100);
+      campaign.contributeToAppeal(pubkey(funderA), 50);
+
+      // getTotalRaised should include both initial and appeal contributions
+      const totalAfterAppeal = campaign.getTotalRaised();
+      expect(totalAfterAppeal).toBe(300); // 150 + 100 + 50
+
+      // Available funds calculation should work correctly
+      const availableFunds = campaign.getAvailableFunds();
+      // 150 (initial) - 15 (DAO fee) - 50 (judgment) + 150 (appeal contributions) = 235
+      expect(availableFunds).toBe(235);
+    });
+
+    it("validates appeal contributions affect available funds correctly", () => {
+      const clock = new FakeClock(24_000);
+      const campaign = new Campaign(
+        {
+          id: "case-023",
+          minRaiseLamports: 500,
+          deadlineUnix: 24_100,
+          refundWindowStartUnix: 24_400,
+          signers: [pubkey(attorney), pubkey(platform), pubkey(client)],
+          daoTreasury: pubkey(daoTreasury)
+        },
+        clock
+      );
+
+      campaign.contribute(pubkey(funderA), 600);
+      clock.set(24_200);
+      campaign.evaluate();
+      
+      // After evaluation: 600 - 60 (DAO fee) = 540 available
+      expect(campaign.getAvailableFunds()).toBe(540);
+      
+      campaign.recordOutcome("win", 200);
+      campaign.depositCourtAward(pubkey(attorney), 200);
+      
+      // After award: 540 + 200 = 740 available
+      expect(campaign.getAvailableFunds()).toBe(740);
+      
+      // Approve appeal with high cost requiring fundraising
+      campaign.approveAppeal(pubkey(attorney), 800, 25_000, "appellate", "appeal");
+      expect(campaign.getStatus()).toBe("appeal_active");
+      
+      // Add appeal contributions
+      campaign.contributeToAppeal(pubkey(funderB), 80);
+      
+      // Should include appeal contributions in available funds
+      // 740 (previous) + 80 (appeal contribution) = 820
+      expect(campaign.getAvailableFunds()).toBe(820);
+    });
   });
 });
