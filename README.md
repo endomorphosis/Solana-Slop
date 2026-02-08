@@ -4,12 +4,47 @@ Minimal repo to confirm you can communicate with the Solana network (defaults to
 
 ## Prereqs
 - Node.js 18+ (recommended 20/22)
+- Python 3.8+ (for complaint-generator integration)
 
 ## Setup
 ```bash
 npm install
 cp .env.example .env
+
+# Initialize complaint-generator submodule
+git submodule update --init --recursive
 ```
+
+## Complaint Generator Integration
+
+This repository integrates the [complaint-generator](https://github.com/endomorphosis/complaint-generator/) as a git submodule for AI-powered legal document generation.
+
+**Location:** `packages/complaint-generator/`
+
+**Features:**
+- AI-powered legal complaint classification and generation
+- Automated legal research and statute retrieval
+- Evidence management with IPFS and DuckDB
+- Web evidence discovery and validation
+- Multi-provider LLM routing (OpenRouter, HuggingFace, Claude, etc.)
+
+**Setup:**
+```bash
+cd packages/complaint-generator
+pip install -r requirements.txt
+
+# Configure LLM providers (optional)
+cp config.llm_router.json.example config.llm_router.json
+# Edit config.llm_router.json with your API keys
+```
+
+**Usage:**
+```bash
+# From packages/complaint-generator directory
+python run.py --input "complaint text" --classify --retrieve-statutes
+```
+
+See [packages/complaint-generator/README.md](packages/complaint-generator/README.md) for complete documentation.
 
 ## Tests (TDD)
 Run unit tests:
@@ -312,6 +347,185 @@ The web interface provides:
 - **Transactions tab**: View complete transaction history by wallet or campaign
 
 *Note: The web interface is a frontend demo. In production, connect it to the AdminDashboard API via a backend service.*
+
+### Client Sign-Up Portal
+
+A comprehensive client sign-up portal with KYC verification, encryption, and complaint generation is available at `web/client-signup.html`.
+
+```bash
+# Visit http://localhost:8000/web/client-signup.html
+```
+
+#### Client Registration Workflow
+
+**Step 1: Account Creation**
+- Clients create an account with username, email, and password
+- Password must be at least 8 characters
+- Optional: Connect Solana wallet address
+- All credentials are encrypted with bcrypt
+
+**Step 2: Email Verification**
+- System sends verification email with 6-digit token
+- Client verifies email by entering verification code
+- Token expires after 24 hours
+
+**Step 3: KYC Information Submission**
+- Client provides required personal information:
+  - Full legal name
+  - Date of birth
+  - Phone number
+  - Last 4 digits of SSN (only last 4 stored)
+  - Residential address (street, city, state, ZIP, country)
+  - Government ID type (driver's license, passport, state ID)
+
+**Step 4: Third-Party Identity Verification**
+- Integration with third-party KYC providers (Stripe Identity, Persona, Onfido)
+- Client uploads government ID and takes selfie
+- Identity matching and liveness check performed
+- **Sensitive documents are NEVER stored on our servers**
+- Verification results returned to our system
+
+**Step 5: Account Approval**
+- Admin reviews verification status
+- Client receives email notification
+- Once approved, client gains access to complaint generator
+
+#### Client-Side Encryption & UCAN
+
+**Encryption Architecture:**
+- **Password-Derived Keys**: PBKDF2 with 100,000 iterations
+- **Document Encryption**: AES-256-GCM authenticated encryption
+- **Master Key**: Encrypted with password-derived key
+- **IPFS Storage**: All documents stored on IPFS with encryption
+- **Client-Side Only**: Decryption happens in browser using password
+
+**UCAN Token Delegation:**
+- **Decentralized Authorization**: UCAN (User Controlled Authorization Networks)
+- **Document Sharing**: Delegate read/write access to attorneys
+- **Time-Limited**: Tokens expire after specified duration
+- **Revocable**: Clients can revoke access at any time
+- **Chain of Trust**: Support for delegation chains
+
+#### Complaint Generator Integration
+
+The platform integrates with [complaint-generator](https://github.com/endomorphosis/complaint-generator/) (Python-based) for AI-powered legal document generation:
+
+**Features:**
+- **Legal Classification**: AI identifies claim types and jurisdiction
+- **Statute Retrieval**: Automatic research of applicable laws
+- **Evidence Management**: IPFS storage with DuckDB metadata
+- **Question Generation**: AI-powered evidence gathering
+- **Encrypted Storage**: All complaints encrypted with client's password
+- **Permanent Decryption**: Final submission decrypts for public access
+
+**Workflow:**
+1. Client drafts complaint using AI assistance
+2. Uploads supporting evidence documents
+3. All data encrypted client-side before IPFS upload
+4. Delegates access to attorneys using UCAN tokens
+5. Attorney reviews and provides feedback
+6. Client finalizes and submits for crowdfunding
+7. Upon submission, complaint permanently decrypted for investors
+
+#### API Usage
+
+```typescript
+import { ClientPortal } from "./src/client/portal.js";
+
+const portal = new ClientPortal(clock);
+
+// Step 1: Register client
+const client = portal.registerClient(
+  "john_doe",
+  "SecurePass123!",
+  "john@example.com"
+);
+
+// Step 2: Verify email
+portal.verifyEmail("john_doe", "verification_token_from_email");
+
+// Step 3: Submit KYC information
+portal.submitKYCInformation("john_doe", {
+  fullName: "John Doe",
+  dateOfBirth: "1990-01-15",
+  phoneNumber: "(555) 123-4567",
+  ssnLast4: "1234",
+  address: {
+    street: "123 Main St",
+    city: "San Francisco",
+    state: "CA",
+    zipCode: "94102",
+    country: "USA"
+  },
+  idType: "drivers_license"
+});
+
+// Step 4: Update KYC status (from third-party verification)
+portal.updateKYCStatus("john_doe", "verified", {
+  provider: "Stripe Identity",
+  verificationId: "id_12345",
+  status: "verified",
+  timestamp: Date.now()
+});
+
+// Step 5: Setup encryption (client-side)
+portal.setupEncryption("john_doe", "SecurePass123!", "solana_wallet_address");
+
+// Encrypt and store document
+const doc = portal.encryptDocument("john_doe", {
+  type: "evidence",
+  name: "Contract Evidence",
+  content: Buffer.from("sensitive document content")
+}, "SecurePass123!");
+
+// Create UCAN token to delegate to attorney
+const ucanToken = portal.createUCANToken(
+  "john_doe",
+  "did:key:attorney_public_key",
+  [{ resource: doc.id, access: "read" }],
+  7 * 24 * 60 * 60 * 1000 // 7 days
+);
+
+// Create complaint
+const complaint = portal.createComplaint(
+  "john_doe",
+  "Contract Breach Complaint",
+  "Detailed description of the legal issue...",
+  [doc.id]
+);
+
+// Submit complaint (permanently decrypt for public access)
+portal.submitComplaint("john_doe", complaint.id);
+```
+
+#### Security Considerations
+
+**What We DO Store:**
+- Hashed passwords (bcrypt)
+- Last 4 digits of SSN only
+- Encrypted documents on IPFS
+- Third-party verification results (not raw documents)
+- KYC information (encrypted)
+
+**What We DON'T Store:**
+- Plaintext passwords
+- Full SSN or government ID numbers
+- Government ID images or scans
+- Decryption keys (stored client-side only)
+
+**Encryption Details:**
+- AES-256-GCM for documents
+- PBKDF2 for key derivation (100,000 iterations)
+- Random salt per user (32 bytes)
+- Random IV per document (16 bytes)
+- Authentication tags for integrity verification
+
+**Production Requirements:**
+- Use EdDSA signatures for UCAN tokens (not HMAC)
+- Integrate real IPFS/Helia for document storage
+- Configure proper third-party KYC provider
+- Set up email service for verification
+- Implement rate limiting and CAPTCHA
 
 ### Attorney Sign-Up Portal
 
