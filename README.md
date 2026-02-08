@@ -165,6 +165,156 @@ campaign.contributeToAppeal(funder, 80000);
 campaign.evaluateAppeal(); // Checks if minimum reached
 ```
 
+## Admin Dashboard
+
+The platform includes a comprehensive admin dashboard for managing campaigns, proposals, accounts, and transactions.
+
+### Features
+
+- **Proposal Review & Approval**: Review and approve/reject crowdfunding proposals submitted by clients
+- **Campaign Oversight**: Monitor all campaigns, their status, funding progress, and workflow history
+- **Case Management**: Track cases in active litigation whose campaigns have completed fundraising
+- **Account Management**: Manage user, client, and attorney accounts
+- **User Profile Analysis**: Detailed user profiles with cross-linked data across campaigns, proposals, and transactions
+- **Transaction Tracking**: View complete transaction history including contributions, refunds, court awards, and invoice payments
+- **Dashboard Statistics**: Real-time overview of platform metrics and user analytics
+
+### API Usage
+
+```typescript
+import { AdminDashboard } from "./src/admin/dashboard.js";
+import { Campaign } from "./src/crowdfunding/campaign.js";
+
+// Initialize dashboard
+const dashboard = new AdminDashboard(clock);
+
+// Register accounts
+dashboard.registerAccount("user1", "user", "John Doe", "john@example.com");
+dashboard.registerAccount("client1", "client", "Jane Smith", "jane@example.com");
+dashboard.registerAccount("attorney1", "attorney", "Bob Law", "bob@lawfirm.com");
+
+// Submit and review proposals
+dashboard.submitProposal(
+  "campaign1",
+  "client1",
+  "attorney1",
+  100000,
+  deadline,
+  "Patent infringement case"
+);
+
+dashboard.approveProposal("campaign1", "admin_wallet", "Approved");
+// or
+dashboard.rejectProposal("campaign1", "admin_wallet", "Insufficient details");
+
+// Register and monitor campaigns (now requires config for full tracking)
+const campaign = new Campaign(config, clock);
+dashboard.registerCampaign(campaign, "campaign1", config);
+
+// Get campaign summary (now includes real config data)
+const summary = dashboard.getCampaignSummary("campaign1");
+console.log(`Min raise: ${summary.minRaiseLamports}`);
+console.log(`Deadline: ${summary.deadlineUnix}`);
+console.log(`Contributors: ${summary.contributorCount}`);
+
+// Track transactions (now updates campaignsParticipated)
+dashboard.recordTransaction({
+  id: "tx1",
+  timestamp: Date.now(),
+  type: "contribution",
+  amount: 50000,
+  from: "user1",
+  to: "campaign1",
+  campaignId: "campaign1"
+});
+
+// View statistics
+const stats = dashboard.getDashboardStats();
+console.log(`Total raised: ${stats.totalRaised}`);
+console.log(`Pending proposals: ${stats.pendingProposals}`);
+
+// Query data (now type-safe with CampaignStatus)
+const pendingProposals = dashboard.listProposals("pending");
+const activeCampaigns = dashboard.listCampaignsByStatus("active");
+const walletTxs = dashboard.getWalletTransactions("user1");
+
+// Get detailed user profile with cross-linked data
+const profile = dashboard.getUserProfile("attorney1");
+console.log(`Campaigns: ${profile.campaigns.join(", ")}`);
+console.log(`Proposals: ${profile.proposals.join(", ")}`);
+console.log(`Total Received: ${profile.analytics.totalReceived}`);
+console.log(`Success Rate: ${profile.analytics.successRate}`);
+
+// Get user analytics
+const analytics = dashboard.getUserAnalytics();
+console.log(`Users: ${analytics.userTypeDistribution.users}`);
+console.log(`Top Contributor: ${analytics.topContributors[0].name}`);
+console.log(`Top Attorney: ${analytics.topAttorneys[0].name}`);
+
+// Search users by type
+const attorneys = dashboard.searchUsers("smith", "attorney");
+
+// Get active litigation cases
+const cases = dashboard.getActiveLitigationCases();
+console.log(`Active cases: ${cases.length}`);
+
+// Get specific case details
+const caseDetails = dashboard.getCaseDetails("campaign1");
+console.log(`Case status: ${caseDetails?.litigationStatus}`);
+console.log(`Court level: ${caseDetails?.currentCourtLevel}`);
+
+// Filter cases by court level
+const appellateCases = dashboard.listCasesByCourtLevel("appellate");
+
+// Get case management statistics
+const caseStats = dashboard.getCaseManagementStats();
+console.log(`Total cases in litigation: ${caseStats.totalCases}`);
+console.log(`Cases in appeal: ${caseStats.casesInAppeal}`);
+```
+
+### Web Interface
+
+A demo web interface is available at `web/admin-dashboard.html`. Open it in a browser to see the dashboard UI:
+
+```bash
+# Using Python's built-in server
+python3 -m http.server 8000
+# Then visit http://localhost:8000/web/admin-dashboard.html
+
+# Or using Node.js http-server (install globally: npm i -g http-server)
+http-server
+# Then visit http://localhost:8080/web/admin-dashboard.html
+```
+
+The web interface provides:
+- **Overview tab**: Platform statistics and recent activity
+- **Proposals tab**: Review and manage proposal submissions with filtering
+- **Campaigns tab**: Monitor all campaigns and their status
+- **Case Management tab**: Track cases in active litigation
+  - Filter by litigation status (In Trial, In Appeal, Awaiting Decision, Awaiting Funding)
+  - Filter by court level (District, Appellate, State Supreme, US Supreme)
+  - View case details including current outcome, available funds, and appeal rounds
+  - Statistics showing cases by status and court level
+  - Identify cases that have completed fundraising but are still in legal proceedings
+- **Accounts tab**: Manage user, client, and attorney accounts with filtering
+- **User Profiles tab**: Detailed profile analysis with cross-linking
+  - Filter by investors, clients, or attorneys
+  - View user analytics (distribution, activity trends)
+  - Top contributors leaderboard
+  - Top attorneys by cases and success rate
+  - Each profile shows campaigns participated, proposals managed, transaction history, and analytics
+  - Cross-references link to other admin sections (campaigns, proposals, transactions)
+- **Transactions tab**: View complete transaction history by wallet or campaign
+
+*Note: The web interface is a frontend demo. In production, connect it to the AdminDashboard API via a backend service.*
+
+### Accessibility
+The web interface includes ARIA attributes for improved accessibility:
+- Tab navigation with `role="tablist"`, `role="tab"`, and `role="tabpanel"`
+- Proper `aria-selected` states for active tabs
+- `aria-labelledby` and `aria-controls` linking tabs to panels
+- Keyboard navigation support for screen readers
+
 ## Ping Solana testnet
 ```bash
 npm run ping

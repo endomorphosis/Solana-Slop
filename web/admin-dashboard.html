@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Solana Crowdfunding Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            background: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-tab:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1em;
+        }
+
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-active {
+            background: #cce5ff;
+            color: #004085;
+        }
+
+        .status-locked {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .status-won {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-lost {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-settled {
+            background: #e2e3e5;
+            color: #383d41;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 5px;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-bar:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        .empty-state svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            opacity: 0.3;
+        }
+
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            border-color: #667eea;
+            background: #667eea;
+            color: white;
+        }
+
+        .account-type {
+            padding: 5px 12px;
+            border-radius: 15px;
+            font-size: 0.85em;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .type-user {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .type-client {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .type-attorney {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .transaction-type {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏛️ Admin Dashboard</h1>
+            <p class="subtitle">Solana Crowdfunding Platform Management</p>
+        </header>
+
+        <div class="nav-tabs" role="tablist">
+            <button id="tab-overview" class="nav-tab active" role="tab" aria-selected="true" aria-controls="overview" onclick="switchTab('overview', event)">📊 Overview</button>
+            <button id="tab-proposals" class="nav-tab" role="tab" aria-selected="false" aria-controls="proposals" onclick="switchTab('proposals', event)">📋 Proposals</button>
+            <button id="tab-campaigns" class="nav-tab" role="tab" aria-selected="false" aria-controls="campaigns" onclick="switchTab('campaigns', event)">💰 Campaigns</button>
+            <button id="tab-case-management" class="nav-tab" role="tab" aria-selected="false" aria-controls="case-management" onclick="switchTab('case-management', event)">⚖️ Case Management</button>
+            <button id="tab-accounts" class="nav-tab" role="tab" aria-selected="false" aria-controls="accounts" onclick="switchTab('accounts', event)">👥 Accounts</button>
+            <button id="tab-user-profiles" class="nav-tab" role="tab" aria-selected="false" aria-controls="user-profiles" onclick="switchTab('user-profiles', event)">👤 User Profiles</button>
+            <button id="tab-transactions" class="nav-tab" role="tab" aria-selected="false" aria-controls="transactions" onclick="switchTab('transactions', event)">💸 Transactions</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div id="overview" class="tab-content active" role="tabpanel" aria-labelledby="tab-overview">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-campaigns">0</div>
+                    <div class="stat-label">Total Campaigns</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="active-campaigns">0</div>
+                    <div class="stat-label">Active Campaigns</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-raised">0 SOL</div>
+                    <div class="stat-label">Total Raised</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="dao-fees">0 SOL</div>
+                    <div class="stat-label">DAO Fees Collected</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="total-accounts">0</div>
+                    <div class="stat-label">Registered Accounts</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="pending-proposals">0</div>
+                    <div class="stat-label">Pending Proposals</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Recent Activity</h2>
+                <p style="color: #666;">Latest transactions and proposal submissions will appear here.</p>
+            </div>
+        </div>
+
+        <!-- Proposals Tab -->
+        <div id="proposals" class="tab-content">
+            <div class="card">
+                <h2>Crowdfunding Proposals</h2>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterProposals('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterProposals('pending', event)">Pending</button>
+                    <button class="filter-btn" onclick="filterProposals('approved', event)">Approved</button>
+                    <button class="filter-btn" onclick="filterProposals('rejected', event)">Rejected</button>
+                </div>
+                <input type="text" class="search-bar" placeholder="Search proposals by campaign ID, client, or attorney... (demo only)" id="proposal-search">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Campaign ID</th>
+                            <th>Client</th>
+                            <th>Attorney</th>
+                            <th>Funding Goal</th>
+                            <th>Status</th>
+                            <th>Submitted</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="proposals-table">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div>No proposals yet. This is a demo interface.</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Campaigns Tab -->
+        <div id="campaigns" class="tab-content">
+            <div class="card">
+                <h2>Campaign Management</h2>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterCampaigns('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterCampaigns('active', event)">Active</button>
+                    <button class="filter-btn" onclick="filterCampaigns('locked', event)">Locked</button>
+                    <button class="filter-btn" onclick="filterCampaigns('won', event)">Won</button>
+                    <button class="filter-btn" onclick="filterCampaigns('lost', event)">Lost</button>
+                    <button class="filter-btn" onclick="filterCampaigns('settled', event)">Settled</button>
+                </div>
+                <input type="text" class="search-bar" placeholder="Search campaigns by ID... (demo only)" id="campaign-search">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Campaign ID</th>
+                            <th>Status</th>
+                            <th>Total Raised</th>
+                            <th>Available Funds</th>
+                            <th>DAO Fee</th>
+                            <th>Round</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="campaigns-table">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div>No campaigns registered. This is a demo interface.</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Case Management Tab -->
+        <div id="case-management" class="tab-content" role="tabpanel" aria-labelledby="tab-case-management">
+            <div class="card">
+                <h2>⚖️ Active Litigation Cases</h2>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Track cases whose campaigns have completed but are still in active litigation.
+                </p>
+                
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterCases('all', event)">All Cases</button>
+                    <button class="filter-btn" onclick="filterCases('in_trial', event)">In Trial</button>
+                    <button class="filter-btn" onclick="filterCases('in_appeal', event)">In Appeal</button>
+                    <button class="filter-btn" onclick="filterCases('awaiting_decision', event)">Awaiting Decision</button>
+                    <button class="filter-btn" onclick="filterCases('awaiting_funding', event)">Awaiting Funding</button>
+                </div>
+                
+                <div class="filter-group" style="margin-top: 10px;">
+                    <strong style="margin-right: 10px;">Court Level:</strong>
+                    <button class="filter-btn" onclick="filterCasesByCourtLevel('district', event)">District</button>
+                    <button class="filter-btn" onclick="filterCasesByCourtLevel('appellate', event)">Appellate</button>
+                    <button class="filter-btn" onclick="filterCasesByCourtLevel('state_supreme', event)">State Supreme</button>
+                    <button class="filter-btn" onclick="filterCasesByCourtLevel('us_supreme', event)">US Supreme</button>
+                </div>
+                
+                <input type="text" class="search-bar" placeholder="Search cases by campaign ID, client, or attorney... (demo only)" id="case-search">
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Campaign ID</th>
+                            <th>Client</th>
+                            <th>Attorney</th>
+                            <th>Litigation Status</th>
+                            <th>Current Outcome</th>
+                            <th>Court Level</th>
+                            <th>Round</th>
+                            <th>Available Funds</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cases-table">
+                        <tr>
+                            <td colspan="9" class="empty-state">
+                                <div>No active litigation cases. This is a demo interface.</div>
+                                <p style="margin-top: 10px; font-size: 0.9em;">
+                                    Cases appear here when campaigns have completed fundraising but are still in legal proceedings.
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Case Statistics -->
+            <div class="stats-grid" style="margin-top: 30px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-cases">0</div>
+                    <div class="stat-label">Total Cases in Litigation</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="cases-in-trial">0</div>
+                    <div class="stat-label">Cases in Trial</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="cases-in-appeal">0</div>
+                    <div class="stat-label">Cases in Appeal</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="cases-awaiting">0</div>
+                    <div class="stat-label">Cases Awaiting Decision</div>
+                </div>
+            </div>
+
+            <!-- Court Level Distribution -->
+            <div class="card" style="margin-top: 20px;">
+                <h3>Cases by Court Level</h3>
+                <div class="stats-grid" style="margin-top: 15px;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="district-cases">0</div>
+                        <div class="stat-label">District Court</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="appellate-cases">0</div>
+                        <div class="stat-label">Appellate Court</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="state-supreme-cases">0</div>
+                        <div class="stat-label">State Supreme Court</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="us-supreme-cases">0</div>
+                        <div class="stat-label">US Supreme Court</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Accounts Tab -->
+        <div id="accounts" class="tab-content">
+            <div class="card">
+                <h2>Account Management</h2>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterAccounts('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterAccounts('user', event)">Users</button>
+                    <button class="filter-btn" onclick="filterAccounts('client', event)">Clients</button>
+                    <button class="filter-btn" onclick="filterAccounts('attorney', event)">Attorneys</button>
+                </div>
+                <input type="text" class="search-bar" placeholder="Search accounts by name, email, or wallet... (demo only)" id="account-search">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Email</th>
+                            <th>Wallet</th>
+                            <th>Total Contributed</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accounts-table">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div>No accounts registered. This is a demo interface.</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- User Profiles Tab -->
+        <div id="user-profiles" class="tab-content" role="tabpanel" aria-labelledby="tab-user-profiles">
+            <div class="card">
+                <h2>User Profile Analysis</h2>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterUserProfiles('all', event)">All Users</button>
+                    <button class="filter-btn" onclick="filterUserProfiles('user', event)">Investors</button>
+                    <button class="filter-btn" onclick="filterUserProfiles('client', event)">Clients</button>
+                    <button class="filter-btn" onclick="filterUserProfiles('attorney', event)">Attorneys</button>
+                </div>
+                <input type="text" class="search-bar" placeholder="Search by name, email, or wallet address... (demo only)" id="profile-search">
+                
+                <div id="profile-list">
+                    <!-- Profile cards will be displayed here -->
+                    <div class="empty-state">
+                        <div>Select a user type or search to view detailed profiles with cross-linked data.</div>
+                        <p style="margin-top: 10px; font-size: 0.9em;">Profiles include: campaigns participated, proposals submitted/managed, transaction history, analytics, and cross-references to other admin sections.</p>
+                    </div>
+                </div>
+
+                <!-- Analytics Summary -->
+                <div style="margin-top: 30px;">
+                    <h3>User Analytics Summary</h3>
+                    <div class="stats-grid" style="margin-top: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-users">0</div>
+                            <div class="stat-label">Total Investors</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-clients">0</div>
+                            <div class="stat-label">Total Clients</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-attorneys">0</div>
+                            <div class="stat-label">Total Attorneys</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="active-users-week">0</div>
+                            <div class="stat-label">Active (Last Week)</div>
+                        </div>
+                    </div>
+
+                    <!-- Top Contributors -->
+                    <div class="card" style="margin-top: 20px;">
+                        <h3>Top Contributors</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Wallet</th>
+                                    <th>Total Contributed</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-contributors">
+                                <tr>
+                                    <td colspan="4" class="empty-state">
+                                        <div>No contribution data available. This is a demo interface.</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Top Attorneys -->
+                    <div class="card" style="margin-top: 20px;">
+                        <h3>Top Attorneys by Cases</h3>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Wallet</th>
+                                    <th>Total Cases</th>
+                                    <th>Success Rate</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="top-attorneys">
+                                <tr>
+                                    <td colspan="5" class="empty-state">
+                                        <div>No attorney data available. This is a demo interface.</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Tab -->
+        <div id="transactions" class="tab-content">
+            <div class="card">
+                <h2>Transaction History</h2>
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterTransactions('all', event)">All</button>
+                    <button class="filter-btn" onclick="filterTransactions('contribution', event)">Contributions</button>
+                    <button class="filter-btn" onclick="filterTransactions('refund', event)">Refunds</button>
+                    <button class="filter-btn" onclick="filterTransactions('invoice_payment', event)">Invoices</button>
+                    <button class="filter-btn" onclick="filterTransactions('court_award', event)">Court Awards</button>
+                </div>
+                <input type="text" class="search-bar" placeholder="Search transactions by ID, wallet, or campaign... (demo only)" id="transaction-search">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Transaction ID</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>From</th>
+                            <th>To</th>
+                            <th>Campaign</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactions-table">
+                        <tr>
+                            <td colspan="7" class="empty-state">
+                                <div>No transactions recorded. This is a demo interface.</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching functionality
+        function switchTab(tabName, event) {
+            // Hide all tab contents
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+
+            // Deactivate all tabs
+            const tabs = document.querySelectorAll('.nav-tab');
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+                tab.setAttribute('aria-selected', 'false');
+            });
+
+            // Show selected tab
+            document.getElementById(tabName).classList.add('active');
+
+            // Activate selected tab button
+            event.target.classList.add('active');
+            event.target.setAttribute('aria-selected', 'true');
+        }
+
+        // Filter functionality for proposals
+        function filterProposals(status, event) {
+            const buttons = document.querySelectorAll('#proposals .filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('Filtering proposals by:', status);
+            // In a real implementation, this would filter the table rows
+        }
+
+        // Filter functionality for campaigns
+        function filterCampaigns(status, event) {
+            const buttons = document.querySelectorAll('#campaigns .filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('Filtering campaigns by:', status);
+            // In a real implementation, this would filter the table rows
+        }
+
+        // Filter functionality for accounts
+        function filterAccounts(type, event) {
+            const buttons = document.querySelectorAll('#accounts .filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('Filtering accounts by:', type);
+            // In a real implementation, this would filter the table rows
+        }
+
+        // Filter functionality for user profiles
+        function filterUserProfiles(type, event) {
+            const buttons = document.querySelectorAll('#user-profiles .filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('Filtering user profiles by:', type);
+            // In a real implementation, this would:
+            // 1. Call dashboard.getUserProfile() for each user of the specified type
+            // 2. Display detailed profile cards with cross-linked data
+            // 3. Show campaigns, proposals, transactions, and analytics for each user
+        }
+
+        // Filter functionality for case management
+        function filterCases(status, event) {
+            // Limit active-state changes to the status filter group only
+            const statusButtons = event.target.parentElement.querySelectorAll('.filter-btn');
+            statusButtons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('Filtering cases by status:', status);
+            // In a real implementation, this would:
+            // 1. Call dashboard.getActiveLitigationCases()
+            // 2. Filter by litigation status
+            // 3. Display filtered cases in the table
+        }
+
+        function filterCasesByCourtLevel(level, event) {
+            const buttons = event.target.parentElement.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('Filtering cases by court level:', level);
+            // In a real implementation, this would:
+            // 1. Call dashboard.listCasesByCourtLevel(level)
+            // 2. Display filtered cases in the table
+        }
+
+        // Filter functionality for transactions
+        function filterTransactions(type, event) {
+            const buttons = document.querySelectorAll('#transactions .filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('Filtering transactions by:', type);
+            // In a real implementation, this would filter the table rows
+        }
+
+        // Initialize with demo data
+        function initDemoData() {
+            // These would normally come from the AdminDashboard API
+            document.getElementById('total-campaigns').textContent = '12';
+            document.getElementById('active-campaigns').textContent = '5';
+            document.getElementById('total-raised').textContent = '1,250 SOL';
+            document.getElementById('dao-fees').textContent = '125 SOL';
+            document.getElementById('total-accounts').textContent = '47';
+            document.getElementById('pending-proposals').textContent = '3';
+            
+            // User analytics data (from dashboard.getUserAnalytics())
+            document.getElementById('total-users').textContent = '32';
+            document.getElementById('total-clients').textContent = '8';
+            document.getElementById('total-attorneys').textContent = '7';
+            document.getElementById('active-users-week').textContent = '18';
+            
+            // Case management data (from dashboard.getCaseManagementStats())
+            document.getElementById('total-cases').textContent = '7';
+            document.getElementById('cases-in-trial').textContent = '2';
+            document.getElementById('cases-in-appeal').textContent = '3';
+            document.getElementById('cases-awaiting').textContent = '2';
+            document.getElementById('district-cases').textContent = '3';
+            document.getElementById('appellate-cases').textContent = '3';
+            document.getElementById('state-supreme-cases').textContent = '1';
+            document.getElementById('us-supreme-cases').textContent = '0';
+        }
+
+        // Initialize the dashboard
+        document.addEventListener('DOMContentLoaded', () => {
+            initDemoData();
+            console.log('Admin Dashboard initialized');
+            console.log('Note: This is a frontend demo. Connect to AdminDashboard API for live data.');
+        });
+    </script>
+</body>
+</html>
