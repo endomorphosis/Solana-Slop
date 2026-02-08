@@ -16,10 +16,6 @@ Welcome to the comprehensive documentation for the legal crowdfunding campaign p
 10. [API Reference Guide](./10-api-reference-guide.md)
 11. [Design Decisions and Rationale](./11-design-decisions-rationale.md)
 12. [Usage Examples and Workflows](./12-usage-examples-workflows.md)
-9. [Testing Strategy and Chaos Testing](./09-testing-strategy-chaos-testing.md)
-10. [API Reference Guide](./10-api-reference-guide.md)
-11. [Design Decisions and Rationale](./11-design-decisions-rationale.md)
-12. [Usage Examples and Workflows](./12-usage-examples-workflows.md)
 
 ## Quick Start
 
@@ -59,7 +55,7 @@ tests/
 - **Differential Approval**: Risk-based approval thresholds (1/3 for wins, 2/3 for losses)
 - **Invoice Payment System**: Transparent attorney service payments
 - **Court Award Deposits**: Attorney-controlled fee deposits
-- **Comprehensive Testing**: 31 unit tests + 102 chaos scenarios
+- **Comprehensive Testing**: 24 unit tests + 102 chaos scenarios
 
 ## Getting Started
 

@@ -49,7 +49,7 @@ export type PublicKeyLike = string;
 ### 3. Test-Driven Development
 
 The system was built using TDD with comprehensive coverage:
-- **31 unit tests** covering all features and edge cases
+- **24 unit tests** covering all features and edge cases
 - **102 chaos scenarios** simulating real-world litigation trajectories
 - **No blockchain dependency** for core logic tests
 

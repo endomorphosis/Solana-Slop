@@ -31,7 +31,7 @@ The platform was built using strict TDD methodology:
 
 ### Unit Tests: 24 Comprehensive Tests
 
-The main test suite validates all core functionality through focused unit tests.
+The main test suite validates all core functionality through focused unit tests (10 top-level tests + 14 nested tests in describe blocks).
 
 **Source**: [`tests/crowdfunding/campaign.test.ts`](../tests/crowdfunding/campaign.test.ts)
 
@@ -598,7 +598,7 @@ Add security-focused tests:
 The Solana-Slop testing strategy demonstrates how blockchain projects can achieve comprehensive validation without blockchain dependencies. The combination of TDD, FakeClock pattern, and chaos testing provides confidence that the platform handles real-world legal campaigns correctly.
 
 **Key Achievements**:
-- 24 unit tests covering all features
+- 24 comprehensive unit tests covering all features
 - 102 chaos scenarios simulating real litigation
 - Multi-year simulations in milliseconds
 - 100% deterministic and reproducible
