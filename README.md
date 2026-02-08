@@ -415,17 +415,32 @@ The platform integrates with [complaint-generator](https://github.com/endomorpho
 - **Statute Retrieval**: Automatic research of applicable laws
 - **Evidence Management**: IPFS storage with DuckDB metadata
 - **Question Generation**: AI-powered evidence gathering
-- **Encrypted Storage**: All complaints encrypted with client's password
-- **Permanent Decryption**: Final submission decrypts for public access
+- **Encrypted Storage**: All complaints encrypted with client's password until final submission
+- **Permanent Decryption**: On final submission, all attached documents are permanently decrypted for investor review
 
 **Workflow:**
-1. Client drafts complaint using AI assistance
-2. Uploads supporting evidence documents
-3. All data encrypted client-side before IPFS upload
-4. Delegates access to attorneys using UCAN tokens
-5. Attorney reviews and provides feedback
-6. Client finalizes and submits for crowdfunding
-7. Upon submission, complaint permanently decrypted for investors
+1. Client drafts complaint using AI assistance from complaint-generator
+2. Uploads supporting evidence documents (encrypted client-side)
+3. All data encrypted client-side with password-derived keys before IPFS upload
+4. Delegates read/write access to attorneys using time-limited UCAN tokens
+5. Attorney reviews documents and provides legal feedback
+6. Client finalizes and submits complaint for crowdfunding approval
+7. **Upon submission, system permanently decrypts all attached documents for public investor review**
+
+**Security Features:**
+- **Email Verification**: Time-limited tokens (24 hours) with proper token validation
+  - Previous tokens invalidated on resend to prevent concurrent valid tokens
+  - Verification validates token matches the currently active token in client profile
+- **Password Storage**: Bcrypt hashing with 10 rounds (passwords are hashed, not encrypted)
+- **Document Encryption**: AES-256-GCM authenticated encryption with password-derived keys
+  - PBKDF2 key derivation with 100,000 iterations and random 32-byte salt per user
+  - Random 16-byte IV per document for semantic security
+- **UCAN Token Security**: HMAC-based signatures with timing-safe comparison (demo implementation)
+  - Token verification reconstructs signature and validates integrity using `crypto.timingSafeEqual()`
+  - Prevents signature tampering and capability modification attacks
+  - **Production Note**: Current HMAC approach is demonstration only; production requires EdDSA signatures with private keys
+- **Document Access Control**: Ownership validated by normalizing PublicKeyLike values to strings for consistent comparison
+- **Automatic Permanent Decryption**: On complaint submission, all attached documents marked as permanently decrypted with new plaintext CIDs for investor access
 
 #### API Usage
 
@@ -501,31 +516,53 @@ portal.submitComplaint("john_doe", complaint.id);
 #### Security Considerations
 
 **What We DO Store:**
-- Hashed passwords (bcrypt)
-- Last 4 digits of SSN only
-- Encrypted documents on IPFS
-- Third-party verification results (not raw documents)
-- KYC information (encrypted)
+- Hashed passwords (bcrypt with 10 rounds - passwords are hashed, not encrypted)
+- Last 4 digits of SSN only (privacy-preserving)
+- Encrypted documents on IPFS (client-side encryption with AES-256-GCM)
+- Third-party verification results (not raw government ID documents)
+- KYC information (encrypted with user's password-derived keys)
+- Email verification tokens (time-limited, 24 hours, invalidated on resend)
 
 **What We DON'T Store:**
-- Plaintext passwords
+- Plaintext passwords (never stored or transmitted)
 - Full SSN or government ID numbers
-- Government ID images or scans
-- Decryption keys (stored client-side only)
+- Government ID images or scans (handled by third-party KYC providers)
+- Decryption keys (stored client-side only, derived from user password)
+
+**Security Features Implemented:**
+- **Email Verification Security**: 
+  - Tokens expire after 24 hours
+  - Previous tokens invalidated when new token is requested
+  - Verification validates token matches currently active token in profile
+  - Prevents concurrent valid tokens and replay attacks
+- **UCAN Token Verification**:
+  - Signature integrity verified using timing-safe comparison (`crypto.timingSafeEqual()`)
+  - Token verification reconstructs HMAC signature from payload
+  - Prevents tampering with capabilities, audience, or expiration
+  - **Note**: Current implementation uses HMAC (demo only); production requires EdDSA with private keys
+- **Document Ownership**:
+  - PublicKeyLike values normalized to strings for consistent comparison
+  - Prevents ownership bypass attacks due to object reference comparison
+- **Permanent Decryption on Submission**:
+  - All attached documents automatically permanently decrypted when complaint is submitted
+  - Enables investor review while maintaining encryption during drafting phase
+  - Documents marked with `isPermanentlyDecrypted`, `decryptedAt`, and `decryptedCid`
 
 **Encryption Details:**
-- AES-256-GCM for documents
-- PBKDF2 for key derivation (100,000 iterations)
-- Random salt per user (32 bytes)
-- Random IV per document (16 bytes)
-- Authentication tags for integrity verification
+- AES-256-GCM for documents (authenticated encryption with integrity verification)
+- PBKDF2 for key derivation (100,000 iterations for resistance against brute force)
+- Random salt per user (32 bytes, prevents rainbow table attacks)
+- Random IV per document (16 bytes, ensures semantic security)
+- Authentication tags for integrity verification (prevents tampering)
 
 **Production Requirements:**
-- Use EdDSA signatures for UCAN tokens (not HMAC)
-- Integrate real IPFS/Helia for document storage
-- Configure proper third-party KYC provider
-- Set up email service for verification
-- Implement rate limiting and CAPTCHA
+- Implement EdDSA signatures for UCAN tokens (replace HMAC with ed25519 or similar)
+- Integrate real IPFS/Helia for document storage (currently in-memory)
+- Configure proper third-party KYC provider APIs
+- Set up secure email service for verification
+- Implement rate limiting and CAPTCHA for registration endpoints
+- Add Content Security Policy (CSP) headers
+- Enable HTTPS/TLS for all communications
 
 ### Attorney Sign-Up Portal
 
