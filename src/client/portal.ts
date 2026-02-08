@@ -388,7 +388,9 @@ export class ClientPortal {
 
     // Store both metadata and encrypted content
     this.encryptedDocuments.set(encryptedDoc.id, encryptedDoc);
-    // Store encrypted content for later retrieval (in production, this would be on IPFS)
+    // Store encrypted content for later retrieval
+    // NOTE: In production, upload encryptedContent to IPFS and store the returned CID
+    // Current implementation uses in-memory storage for demonstration
     this.documentContents.set(encryptedDoc.id, encryptedContent);
 
     return encryptedDoc;
@@ -806,14 +808,16 @@ export class ClientPortal {
    * In production, this would call the Python API via HTTP or subprocess
    */
   private async integrateWithComplaintGenerator(complaint: ComplaintSubmission): Promise<string> {
-    // Simulate complaint generation
+    // PLACEHOLDER: Simulate complaint generation
     // In production:
     // 1. Call complaint-generator API with complaint details
     // 2. Get back classification, analysis, and generated legal document
     // 3. Upload generated document to IPFS
     // 4. Return IPFS CID
     
-    return `ipfs://Qm${crypto.randomBytes(32).toString("hex")}`;
+    // NOTE: This generates a mock CID format for demonstration
+    // Real IPFS CIDs use base58 encoding (e.g., QmXxx with 46 characters)
+    return `ipfs://Qm${crypto.randomBytes(22).toString("base64").replace(/[+/=]/g, "")}`;
   }
 
   /**
