@@ -808,4 +808,172 @@ describe("ClientPortal", () => {
       expect(emailResults).toHaveLength(1);
     });
   });
+
+  describe("Complaint Generator Integration", () => {
+    beforeEach(async () => {
+      // Setup a verified client with encryption
+      const profile = await portal.registerClient("testuser", "password123", "test@example.com");
+      portal.verifyEmail("testuser", profile.credentials.emailVerificationToken!);
+      await portal.submitKYCInformation("testuser", {
+        fullName: "Test User",
+        dateOfBirth: "1990-01-01",
+        phoneNumber: "(555) 123-4567",
+        ssnLast4: "1234",
+        address: {
+          street: "123 Main St",
+          city: "San Francisco",
+          state: "CA",
+          zipCode: "94102",
+          country: "USA"
+        },
+        idType: "drivers_license",
+        status: "not_started"
+      });
+      await portal.updateKYCStatus("testuser", "verified", {
+        provider: "Test Provider",
+        verificationId: "test123",
+        status: "verified",
+        timestamp: clock.now()
+      });
+      await portal.setupEncryption("testuser", "password123", "solana_test_wallet");
+    });
+
+    it("should check if complaint generator is available", async () => {
+      const isAvailable = await portal.isComplaintGeneratorAvailable();
+      expect(typeof isAvailable).toBe("boolean");
+    });
+
+    it("should classify a complaint", async () => {
+      const classification = await portal.classifyComplaint(
+        "I was discriminated against at work due to my race."
+      );
+
+      expect(classification).toBeDefined();
+      expect(classification.claimTypes).toBeInstanceOf(Array);
+      expect(classification.claimTypes.length).toBeGreaterThan(0);
+      expect(classification.jurisdiction).toBeDefined();
+      expect(classification.confidence).toBeGreaterThanOrEqual(0);
+      expect(classification.confidence).toBeLessThanOrEqual(1);
+    });
+
+    it("should retrieve relevant statutes", async () => {
+      const statutes = await portal.retrieveStatutes(
+        "I was discriminated against at work."
+      );
+
+      expect(statutes).toBeInstanceOf(Array);
+      expect(statutes.length).toBeGreaterThan(0);
+      
+      const statute = statutes[0];
+      expect(statute.citation).toBeDefined();
+      expect(statute.title).toBeDefined();
+      expect(statute.text).toBeDefined();
+      expect(statute.source).toBeDefined();
+    });
+
+    it("should retrieve statutes with classification", async () => {
+      const classification = {
+        claimTypes: ["employment_discrimination"],
+        jurisdiction: "federal",
+        legalAreas: ["employment_law"],
+        confidence: 0.85
+      };
+
+      const statutes = await portal.retrieveStatutes(
+        "Employment discrimination case",
+        classification
+      );
+
+      expect(statutes).toBeInstanceOf(Array);
+      expect(statutes.length).toBeGreaterThan(0);
+    });
+
+    it("should generate evidence-gathering questions", async () => {
+      const questions = await portal.generateEvidenceQuestions(
+        "I was discriminated against at work."
+      );
+
+      expect(questions).toBeInstanceOf(Array);
+      expect(questions.length).toBeGreaterThan(0);
+      
+      const question = questions[0];
+      expect(question.question).toBeDefined();
+      expect(question.category).toBeDefined();
+      expect(["high", "medium", "low"]).toContain(question.priority);
+      expect(question.reasoning).toBeDefined();
+    });
+
+    it("should search legal resources", async () => {
+      const resources = await portal.searchLegalResources("employment discrimination");
+
+      expect(resources).toBeInstanceOf(Array);
+      expect(resources.length).toBeGreaterThan(0);
+      
+      const resource = resources[0];
+      expect(resource.title).toBeDefined();
+      expect(resource.url).toBeDefined();
+      expect(resource.snippet).toBeDefined();
+      expect(resource.source).toBeDefined();
+    });
+
+    it("should search web archives", async () => {
+      const results = await portal.searchWebArchives("employment law history");
+
+      expect(results).toBeInstanceOf(Array);
+      expect(results.length).toBeGreaterThan(0);
+      
+      const result = results[0];
+      expect(result.url).toBeDefined();
+      expect(result.title).toBeDefined();
+      expect(result.snippet).toBeDefined();
+      expect(result.timestamp).toBeDefined();
+      expect(result.archiveUrl).toBeDefined();
+    });
+
+    it("should generate complete complaint with AI", async () => {
+      const result = await portal.generateComplaintWithAI(
+        "I was discriminated against at work due to my race."
+      );
+
+      expect(result).toBeDefined();
+      expect(result.classification).toBeDefined();
+      expect(result.statutes).toBeInstanceOf(Array);
+      expect(result.evidenceSuggestions).toBeInstanceOf(Array);
+      expect(result.analysis).toBeDefined();
+      expect(result.analysis.strength).toBeDefined();
+      expect(["high", "medium", "low"]).toContain(result.analysis.strength);
+      expect(result.analysis.recommendations).toBeInstanceOf(Array);
+    });
+
+    it("should integrate complaint generator when submitting complaint", async () => {
+      // First authenticate to verify password
+      await portal.authenticateClient("testuser", "password123");
+      
+      const doc = await portal.encryptDocument(
+        "testuser",
+        "password123",
+        Buffer.from("test evidence"),
+        {
+          type: "evidence",
+          name: "Evidence Doc",
+          cid: "QmTestEvidence"
+        }
+      );
+
+      const complaint = portal.createComplaint(
+        "testuser",
+        "Discrimination Case",
+        "I was discriminated against at work.",
+        [doc.id]
+      );
+
+      const submitted = await portal.submitComplaint("testuser", complaint.id);
+
+      expect(submitted.status).toBe("submitted");
+      expect(submitted.submittedAt).toBeDefined();
+      expect(submitted.generatedComplaint).toBeDefined();
+      expect(submitted.generatedComplaint?.classification).toBeDefined();
+      expect(submitted.generatedComplaint?.analysis).toBeDefined();
+    });
+  });
 });
