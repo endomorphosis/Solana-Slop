@@ -890,6 +890,15 @@ export class ClientPortal {
   }
 
   /**
+   * Generate a mock IPFS CID for development/testing
+   */
+  private generateMockCID(): string {
+    // NOTE: This generates a mock CID format for demonstration
+    // Real IPFS CIDs use base58 encoding (e.g., QmXxx with 46 characters)
+    return `ipfs://Qm${crypto.randomBytes(22).toString("base64").replace(/[+/=]/g, "")}`;
+  }
+
+  /**
    * Integration with complaint-generator Python package
    * Calls the Python API to analyze and classify the complaint
    */
@@ -900,7 +909,7 @@ export class ClientPortal {
       
       // Store the analysis results in the complaint
       complaint.generatedComplaint = {
-        cid: `ipfs://Qm${crypto.randomBytes(22).toString("base64").replace(/[+/=]/g, "")}`,
+        cid: this.generateMockCID(),
         generatedAt: this.clock.now(),
         classification: result.classification,
         analysis: result.analysis
@@ -910,7 +919,7 @@ export class ClientPortal {
     } catch (error) {
       console.error("Error integrating with complaint generator:", error);
       // Fall back to mock CID if integration fails
-      return `ipfs://Qm${crypto.randomBytes(22).toString("base64").replace(/[+/=]/g, "")}`;
+      return this.generateMockCID();
     }
   }
 

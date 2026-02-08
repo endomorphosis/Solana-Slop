@@ -547,7 +547,8 @@
 
             // Show selected section
             document.getElementById(sectionId).classList.add('active');
-            event.target.classList.add('active');
+            // Find and activate the button that was clicked
+            document.querySelector(`[onclick*="showSection('${sectionId}')"]`)?.classList.add('active');
 
             // Load complaints if that section is selected
             if (sectionId === 'complaints') {
