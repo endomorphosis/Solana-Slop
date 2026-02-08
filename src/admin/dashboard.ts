@@ -12,7 +12,12 @@ import type {
   UserAnalytics,
   LitigationCase,
   LitigationStatus,
-  CaseManagementStats
+  CaseManagementStats,
+  AttorneyProfile,
+  AttorneyRegistration,
+  BarLicenseInfo,
+  PracticeArea,
+  AttorneyVerificationStatus
 } from "./types.js";
 
 /**
@@ -34,6 +39,8 @@ export class AdminDashboard {
   private readonly accounts = new Map<PublicKeyLike, AccountInfo>();
   private readonly proposals = new Map<string, ProposalReview>();
   private readonly transactions: TransactionRecord[] = [];
+  private readonly attorneyRegistrations = new Map<string, AttorneyRegistration>();
+  private readonly attorneyProfiles = new Map<PublicKeyLike, AttorneyProfile>();
   private readonly clock: Clock;
 
   constructor(clock: Clock) {
@@ -718,5 +725,218 @@ export class AdminDashboard {
       description: proposal?.description,
       lastUpdated: this.clock.now()
     };
+  }
+
+  /**
+   * Register a new attorney signup (initial registration)
+   */
+  registerAttorneySignup(
+    username: string,
+    email: string
+  ): AttorneyRegistration {
+    // Check for duplicate username
+    const existingRegistration = Array.from(this.attorneyRegistrations.values()).find(
+      reg => reg.username === username
+    );
+    if (existingRegistration) {
+      throw new Error("Username already exists");
+    }
+
+    // Check for duplicate email
+    const existingByEmail = Array.from(this.attorneyRegistrations.values()).find(
+      reg => reg.email === email
+    );
+    if (existingByEmail) {
+      throw new Error("Email already registered");
+    }
+
+    const registration: AttorneyRegistration = {
+      id: `attorney_reg_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+      username,
+      email,
+      emailVerified: false,
+      registeredAt: this.clock.now(),
+      verificationToken: Math.random().toString(36).substring(2, 15)
+    };
+
+    this.attorneyRegistrations.set(registration.id, registration);
+    return registration;
+  }
+
+  /**
+   * Verify attorney email
+   */
+  verifyAttorneyEmail(registrationId: string, token: string): void {
+    const registration = this.attorneyRegistrations.get(registrationId);
+    if (!registration) {
+      throw new Error("Registration not found");
+    }
+
+    if (registration.verificationToken !== token) {
+      throw new Error("Invalid verification token");
+    }
+
+    registration.emailVerified = true;
+    registration.verificationToken = undefined;
+  }
+
+  /**
+   * Submit attorney profile details (after email verification)
+   */
+  submitAttorneyDetails(
+    registrationId: string,
+    publicKey: PublicKeyLike,
+    fullName: string,
+    barLicense: BarLicenseInfo,
+    practiceAreas: PracticeArea[],
+    acceptsSolicitations: boolean,
+    bio?: string
+  ): AttorneyProfile {
+    const registration = this.attorneyRegistrations.get(registrationId);
+    if (!registration) {
+      throw new Error("Registration not found");
+    }
+
+    if (!registration.emailVerified) {
+      throw new Error("Email must be verified before submitting profile");
+    }
+
+    // Check if profile already exists for this public key
+    if (this.attorneyProfiles.has(publicKey)) {
+      throw new Error("Profile already exists for this public key");
+    }
+
+    const profile: AttorneyProfile = {
+      publicKey,
+      fullName,
+      email: registration.email,
+      emailVerified: true,
+      barLicense,
+      practiceAreas,
+      acceptsSolicitations,
+      verificationStatus: "pending",
+      registeredAt: registration.registeredAt,
+      bio
+    };
+
+    this.attorneyProfiles.set(publicKey, profile);
+    return profile;
+  }
+
+  /**
+   * Get attorney profile by public key
+   */
+  getAttorneyProfile(publicKey: PublicKeyLike): AttorneyProfile | undefined {
+    return this.attorneyProfiles.get(publicKey);
+  }
+
+  /**
+   * List attorney profiles, optionally filtered by verification status
+   */
+  listAttorneyProfiles(verificationStatus?: AttorneyVerificationStatus): AttorneyProfile[] {
+    const profiles = Array.from(this.attorneyProfiles.values());
+    if (verificationStatus) {
+      return profiles.filter(p => p.verificationStatus === verificationStatus);
+    }
+    return profiles;
+  }
+
+  /**
+   * List pending attorney profiles awaiting admin verification
+   */
+  listPendingAttorneys(): AttorneyProfile[] {
+    return this.listAttorneyProfiles("pending");
+  }
+
+  /**
+   * Verify attorney profile (admin action)
+   */
+  verifyAttorneyProfile(
+    publicKey: PublicKeyLike,
+    adminWallet: PublicKeyLike,
+    approved: boolean,
+    notes?: string
+  ): AttorneyProfile {
+    const profile = this.attorneyProfiles.get(publicKey);
+    if (!profile) {
+      throw new Error("Attorney profile not found");
+    }
+
+    if (profile.verificationStatus !== "pending") {
+      throw new Error("Profile is not in pending status");
+    }
+
+    profile.verificationStatus = approved ? "verified" : "rejected";
+    profile.verifiedBy = adminWallet;
+    profile.verifiedAt = this.clock.now();
+    profile.verificationNotes = notes;
+
+    // If verified, also register as an account in the system
+    if (approved) {
+      try {
+        this.registerAccount(
+          publicKey,
+          "attorney",
+          profile.fullName,
+          profile.email
+        );
+      } catch (error) {
+        // Account may already exist, ignore error
+      }
+    }
+
+    return profile;
+  }
+
+  /**
+   * Update attorney profile (by the attorney themselves)
+   */
+  updateAttorneyProfile(
+    publicKey: PublicKeyLike,
+    updates: Partial<Pick<AttorneyProfile, "practiceAreas" | "acceptsSolicitations" | "bio">>
+  ): AttorneyProfile {
+    const profile = this.attorneyProfiles.get(publicKey);
+    if (!profile) {
+      throw new Error("Attorney profile not found");
+    }
+
+    if (updates.practiceAreas !== undefined) {
+      profile.practiceAreas = updates.practiceAreas;
+    }
+    if (updates.acceptsSolicitations !== undefined) {
+      profile.acceptsSolicitations = updates.acceptsSolicitations;
+    }
+    if (updates.bio !== undefined) {
+      profile.bio = updates.bio;
+    }
+
+    return profile;
+  }
+
+  /**
+   * Get attorney registration by ID
+   */
+  getAttorneyRegistration(registrationId: string): AttorneyRegistration | undefined {
+    return this.attorneyRegistrations.get(registrationId);
+  }
+
+  /**
+   * Search verified attorneys by criteria
+   */
+  searchVerifiedAttorneys(
+    practiceArea?: PracticeArea,
+    acceptsSolicitations?: boolean
+  ): AttorneyProfile[] {
+    let profiles = this.listAttorneyProfiles("verified");
+
+    if (practiceArea) {
+      profiles = profiles.filter(p => p.practiceAreas.includes(practiceArea));
+    }
+
+    if (acceptsSolicitations !== undefined) {
+      profiles = profiles.filter(p => p.acceptsSolicitations === acceptsSolicitations);
+    }
+
+    return profiles;
   }
 }
