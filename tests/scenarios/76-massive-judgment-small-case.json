@@ -1,0 +1,32 @@
+{
+  "name": "76-massive-judgment-small-case",
+  "description": "Huge judgment on small case",
+  "initialFunding": 80000,
+  "minRaise": 50000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 80000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 10000000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Stress: huge award on small case"
+}

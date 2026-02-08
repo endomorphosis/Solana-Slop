@@ -1,0 +1,57 @@
+{
+  "name": "117-win-with-incremental-deposits",
+  "description": "Gradual award deposits",
+  "initialFunding": 145000,
+  "minRaise": 95000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 145000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 90000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 2100
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 3000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 4000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 5000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 6000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 7000
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Gradual deposits over time"
+}

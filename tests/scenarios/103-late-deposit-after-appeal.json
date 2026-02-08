@@ -1,0 +1,53 @@
+{
+  "name": "103-late-deposit-after-appeal",
+  "description": "Deposit comes after appeal starts",
+  "initialFunding": 140000,
+  "minRaise": 95000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 140000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 80000,
+      "timestamp": 2000
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 175000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 2100
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 100000,
+      "timestamp": 2500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 80000,
+      "timestamp": 3000
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 6100,
+      "expectedStatus": "locked"
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Deposit timing during appeal"
+}

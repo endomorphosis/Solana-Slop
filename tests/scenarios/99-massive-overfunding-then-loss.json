@@ -1,0 +1,32 @@
+{
+  "name": "99-massive-overfunding-then-loss",
+  "description": "Huge funding but still lose",
+  "initialFunding": 2000000,
+  "minRaise": 1000000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 2000000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 500000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 500000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Massive funding can't prevent loss"
+}

@@ -1,0 +1,44 @@
+{
+  "name": "78-rapid-timestamp-succession",
+  "description": "Events very close in time",
+  "initialFunding": 150000,
+  "minRaise": 100000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 150000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1001,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 40000,
+      "timestamp": 1002
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 40000,
+      "timestamp": 1003
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 1500,
+      "timestamp": 1004
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Edge: rapid succession of events"
+}

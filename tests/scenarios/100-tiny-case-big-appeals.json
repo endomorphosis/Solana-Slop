@@ -1,0 +1,54 @@
+{
+  "name": "100-tiny-case-big-appeals",
+  "description": "Small initial, big appeal costs",
+  "initialFunding": 50000,
+  "minRaise": 30000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 50000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 10000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 10000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 200000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 2200
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 180000,
+      "timestamp": 2500
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 5100,
+      "expectedStatus": "locked"
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Small case, disproportionate appeals"
+}

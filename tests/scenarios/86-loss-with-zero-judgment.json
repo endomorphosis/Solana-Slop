@@ -1,0 +1,39 @@
+{
+  "name": "86-loss-with-zero-judgment",
+  "description": "Loss but no judgment owed",
+  "initialFunding": 140000,
+  "minRaise": 95000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 140000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 0,
+      "timestamp": 2000
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 80000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Edge: loss with no financial penalty"
+}

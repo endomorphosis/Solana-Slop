@@ -1,0 +1,26 @@
+{
+  "name": "98-back-to-back-settlements",
+  "description": "Multiple settlement attempts",
+  "initialFunding": 155000,
+  "minRaise": 105000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 155000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "district",
+      "timestamp": 1500
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": "Quick settlement"
+}

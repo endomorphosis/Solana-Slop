@@ -1,0 +1,114 @@
+{
+  "name": "91-maximum-judgments-paid",
+  "description": "Pay many sequential judgments",
+  "initialFunding": 500000,
+  "minRaise": 300000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 500000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 50000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 50000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 80000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 60000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 60000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 90000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 3700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 70000,
+      "timestamp": 5500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 70000,
+      "timestamp": 5600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 250000,
+      "courtLevel": "us_supreme",
+      "path": "appeal",
+      "deadline": 10000,
+      "timestamp": 5700
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 200000,
+      "timestamp": 6000
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 10100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "us_supreme",
+      "judgmentAmount": 90000,
+      "timestamp": 11000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 90000,
+      "timestamp": 11100
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Maximum judgment payments"
+}

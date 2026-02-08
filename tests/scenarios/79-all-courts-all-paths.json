@@ -1,0 +1,98 @@
+{
+  "name": "79-all-courts-all-paths",
+  "description": "Touch every court level and path type",
+  "initialFunding": 500000,
+  "minRaise": 300000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 500000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 200000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 200000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 80000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 0,
+      "timestamp": 3500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 90000,
+      "courtLevel": "district",
+      "path": "retrial",
+      "deadline": 6000,
+      "timestamp": 3600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 180000,
+      "timestamp": 5500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "client"
+      ],
+      "estimatedCost": 95000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 8000,
+      "timestamp": 5600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 190000,
+      "timestamp": 7500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform"
+      ],
+      "estimatedCost": 120000,
+      "courtLevel": "us_supreme",
+      "path": "appeal",
+      "deadline": 12000,
+      "timestamp": 7600
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Comprehensive: all court levels and paths"
+}

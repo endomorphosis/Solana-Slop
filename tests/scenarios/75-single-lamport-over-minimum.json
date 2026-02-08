@@ -1,0 +1,32 @@
+{
+  "name": "75-single-lamport-over-minimum",
+  "description": "One lamport over minimum",
+  "initialFunding": 100001,
+  "minRaise": 100000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 100001,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 25000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 25000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Boundary: one over minimum"
+}

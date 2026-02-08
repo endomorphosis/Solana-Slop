@@ -1,0 +1,69 @@
+{
+  "name": "93-settlement-after-many-deposits",
+  "description": "Settle after building up funds",
+  "initialFunding": 160000,
+  "minRaise": 110000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 160000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 100000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 20000,
+      "timestamp": 2100
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 20000,
+      "timestamp": 2200
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 20000,
+      "timestamp": 2300
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 20000,
+      "timestamp": 2400
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 20000,
+      "timestamp": 2500
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 75000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 5000,
+      "timestamp": 2600
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "appellate",
+      "timestamp": 4000
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": "Settle with accumulated deposits"
+}

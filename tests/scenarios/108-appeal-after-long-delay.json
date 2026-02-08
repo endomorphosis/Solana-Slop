@@ -1,0 +1,44 @@
+{
+  "name": "108-appeal-after-long-delay",
+  "description": "Very delayed appeal filing",
+  "initialFunding": 165000,
+  "minRaise": 110000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 165000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 45000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 45000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 75000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 100000,
+      "timestamp": 50000
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": "Extremely delayed appeal"
+}

@@ -1,0 +1,102 @@
+{
+  "name": "102-win-lose-win-lose-pattern",
+  "description": "Consistent oscillation",
+  "initialFunding": 300000,
+  "minRaise": 195000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 300000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 100000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 100000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 80000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 80000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 90000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 3700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 120000,
+      "timestamp": 5500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 40000,
+      "timestamp": 5600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "client"
+      ],
+      "estimatedCost": 105000,
+      "courtLevel": "us_supreme",
+      "path": "appeal",
+      "deadline": 8000,
+      "timestamp": 5700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "us_supreme",
+      "judgmentAmount": 110000,
+      "timestamp": 7500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 110000,
+      "timestamp": 7600
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Perfect W-L-W-L oscillation"
+}

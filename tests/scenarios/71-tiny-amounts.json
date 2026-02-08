@@ -1,0 +1,32 @@
+{
+  "name": "71-tiny-amounts",
+  "description": "Minimal amounts throughout",
+  "initialFunding": 100,
+  "minRaise": 50,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 100,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 10,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 10,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Edge case: minimal amounts"
+}

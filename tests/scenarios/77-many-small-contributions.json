@@ -1,0 +1,67 @@
+{
+  "name": "77-many-small-contributions",
+  "description": "Simulated multiple contributors",
+  "initialFunding": 200000,
+  "minRaise": 130000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 200000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 80000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000,
+      "timestamp": 2050
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000,
+      "timestamp": 2100
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000,
+      "timestamp": 2150
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000,
+      "timestamp": 2200
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000,
+      "timestamp": 2250
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000,
+      "timestamp": 2300
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000,
+      "timestamp": 2350
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 10000,
+      "timestamp": 2400
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": "Stress: many small deposits"
+}

@@ -1,0 +1,26 @@
+{
+  "name": "72-near-zero-timestamps",
+  "description": "Events at very early timestamps",
+  "initialFunding": 150000,
+  "minRaise": 100000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 150000,
+      "timestamp": 1
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 10,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "district",
+      "timestamp": 20
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": "Edge case: near-zero timestamps"
+}

@@ -1,0 +1,55 @@
+{
+  "name": "87-win-then-immediate-loss",
+  "description": "Win quickly reversed",
+  "initialFunding": 190000,
+  "minRaise": 125000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 190000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 85000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 85000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 60000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 3000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 95000,
+      "timestamp": 2900
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 95000,
+      "timestamp": 2950
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": "Quick reversal scenario"
+}
