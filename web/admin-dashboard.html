@@ -324,6 +324,7 @@
             <button class="nav-tab active" onclick="switchTab('overview', event)">📊 Overview</button>
             <button class="nav-tab" onclick="switchTab('proposals', event)">📋 Proposals</button>
             <button class="nav-tab" onclick="switchTab('campaigns', event)">💰 Campaigns</button>
+            <button class="nav-tab" onclick="switchTab('case-management', event)">⚖️ Case Management</button>
             <button class="nav-tab" onclick="switchTab('accounts', event)">👥 Accounts</button>
             <button class="nav-tab" onclick="switchTab('user-profiles', event)">👤 User Profiles</button>
             <button class="nav-tab" onclick="switchTab('transactions', event)">💸 Transactions</button>
@@ -431,6 +432,103 @@
                         </tr>
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- Case Management Tab -->
+        <div id="case-management" class="tab-content">
+            <div class="card">
+                <h2>⚖️ Active Litigation Cases</h2>
+                <p style="color: #666; margin-bottom: 20px;">
+                    Track cases whose campaigns have completed but are still in active litigation.
+                </p>
+                
+                <div class="filter-group">
+                    <button class="filter-btn active" onclick="filterCases('all', event)">All Cases</button>
+                    <button class="filter-btn" onclick="filterCases('in_trial', event)">In Trial</button>
+                    <button class="filter-btn" onclick="filterCases('in_appeal', event)">In Appeal</button>
+                    <button class="filter-btn" onclick="filterCases('awaiting_decision', event)">Awaiting Decision</button>
+                    <button class="filter-btn" onclick="filterCases('awaiting_funding', event)">Awaiting Funding</button>
+                </div>
+                
+                <div class="filter-group" style="margin-top: 10px;">
+                    <strong style="margin-right: 10px;">Court Level:</strong>
+                    <button class="filter-btn" onclick="filterCasesByCourtLevel('district', event)">District</button>
+                    <button class="filter-btn" onclick="filterCasesByCourtLevel('appellate', event)">Appellate</button>
+                    <button class="filter-btn" onclick="filterCasesByCourtLevel('state_supreme', event)">State Supreme</button>
+                    <button class="filter-btn" onclick="filterCasesByCourtLevel('us_supreme', event)">US Supreme</button>
+                </div>
+                
+                <input type="text" class="search-bar" placeholder="Search cases by campaign ID, client, or attorney... (demo only)" id="case-search">
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Campaign ID</th>
+                            <th>Client</th>
+                            <th>Attorney</th>
+                            <th>Litigation Status</th>
+                            <th>Current Outcome</th>
+                            <th>Court Level</th>
+                            <th>Round</th>
+                            <th>Available Funds</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cases-table">
+                        <tr>
+                            <td colspan="9" class="empty-state">
+                                <div>No active litigation cases. This is a demo interface.</div>
+                                <p style="margin-top: 10px; font-size: 0.9em;">
+                                    Cases appear here when campaigns have completed fundraising but are still in legal proceedings.
+                                </p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Case Statistics -->
+            <div class="stats-grid" style="margin-top: 30px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="total-cases">0</div>
+                    <div class="stat-label">Total Cases in Litigation</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="cases-in-trial">0</div>
+                    <div class="stat-label">Cases in Trial</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="cases-in-appeal">0</div>
+                    <div class="stat-label">Cases in Appeal</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="cases-awaiting">0</div>
+                    <div class="stat-label">Cases Awaiting Decision</div>
+                </div>
+            </div>
+
+            <!-- Court Level Distribution -->
+            <div class="card" style="margin-top: 20px;">
+                <h3>Cases by Court Level</h3>
+                <div class="stats-grid" style="margin-top: 15px;">
+                    <div class="stat-card">
+                        <div class="stat-value" id="district-cases">0</div>
+                        <div class="stat-label">District Court</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="appellate-cases">0</div>
+                        <div class="stat-label">Appellate Court</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="state-supreme-cases">0</div>
+                        <div class="stat-label">State Supreme Court</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="us-supreme-cases">0</div>
+                        <div class="stat-label">US Supreme Court</div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -655,6 +753,33 @@
             // 3. Show campaigns, proposals, transactions, and analytics for each user
         }
 
+        // Filter functionality for case management
+        function filterCases(status, event) {
+            const buttons = document.querySelectorAll('#case-management .filter-btn');
+            buttons.forEach(btn => {
+                if (btn.textContent.toLowerCase().includes('court')) return; // Skip court level buttons
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            console.log('Filtering cases by status:', status);
+            // In a real implementation, this would:
+            // 1. Call dashboard.getActiveLitigationCases()
+            // 2. Filter by litigation status
+            // 3. Display filtered cases in the table
+        }
+
+        function filterCasesByCourtLevel(level, event) {
+            const buttons = event.target.parentElement.querySelectorAll('.filter-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            console.log('Filtering cases by court level:', level);
+            // In a real implementation, this would:
+            // 1. Call dashboard.listCasesByCourtLevel(level)
+            // 2. Display filtered cases in the table
+        }
+
         // Filter functionality for transactions
         function filterTransactions(type, event) {
             const buttons = document.querySelectorAll('#transactions .filter-btn');
@@ -680,6 +805,16 @@
             document.getElementById('total-clients').textContent = '8';
             document.getElementById('total-attorneys').textContent = '7';
             document.getElementById('active-users-week').textContent = '18';
+            
+            // Case management data (from dashboard.getCaseManagementStats())
+            document.getElementById('total-cases').textContent = '7';
+            document.getElementById('cases-in-trial').textContent = '2';
+            document.getElementById('cases-in-appeal').textContent = '3';
+            document.getElementById('cases-awaiting').textContent = '2';
+            document.getElementById('district-cases').textContent = '3';
+            document.getElementById('appellate-cases').textContent = '3';
+            document.getElementById('state-supreme-cases').textContent = '1';
+            document.getElementById('us-supreme-cases').textContent = '0';
         }
 
         // Initialize the dashboard

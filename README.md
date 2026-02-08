@@ -173,6 +173,7 @@ The platform includes a comprehensive admin dashboard for managing campaigns, pr
 
 - **Proposal Review & Approval**: Review and approve/reject crowdfunding proposals submitted by clients
 - **Campaign Oversight**: Monitor all campaigns, their status, funding progress, and workflow history
+- **Case Management**: Track cases in active litigation whose campaigns have completed fundraising
 - **Account Management**: Manage user, client, and attorney accounts
 - **User Profile Analysis**: Detailed user profiles with cross-linked data across campaigns, proposals, and transactions
 - **Transaction Tracking**: View complete transaction history including contributions, refunds, court awards, and invoice payments
@@ -249,6 +250,23 @@ console.log(`Top Attorney: ${analytics.topAttorneys[0].name}`);
 
 // Search users by type
 const attorneys = dashboard.searchUsers("smith", "attorney");
+
+// Get active litigation cases
+const cases = dashboard.getActiveLitigationCases();
+console.log(`Active cases: ${cases.length}`);
+
+// Get specific case details
+const caseDetails = dashboard.getCaseDetails("campaign1");
+console.log(`Case status: ${caseDetails?.litigationStatus}`);
+console.log(`Court level: ${caseDetails?.currentCourtLevel}`);
+
+// Filter cases by court level
+const appellateCases = dashboard.listCasesByCourtLevel("appellate");
+
+// Get case management statistics
+const caseStats = dashboard.getCaseManagementStats();
+console.log(`Total cases in litigation: ${caseStats.totalCases}`);
+console.log(`Cases in appeal: ${caseStats.casesInAppeal}`);
 ```
 
 ### Web Interface
@@ -269,6 +287,12 @@ The web interface provides:
 - **Overview tab**: Platform statistics and recent activity
 - **Proposals tab**: Review and manage proposal submissions with filtering
 - **Campaigns tab**: Monitor all campaigns and their status
+- **Case Management tab**: Track cases in active litigation
+  - Filter by litigation status (In Trial, In Appeal, Awaiting Decision, Awaiting Funding)
+  - Filter by court level (District, Appellate, State Supreme, US Supreme)
+  - View case details including current outcome, available funds, and appeal rounds
+  - Statistics showing cases by status and court level
+  - Identify cases that have completed fundraising but are still in legal proceedings
 - **Accounts tab**: Manage user, client, and attorney accounts with filtering
 - **User Profiles tab**: Detailed profile analysis with cross-linking
   - Filter by investors, clients, or attorneys
