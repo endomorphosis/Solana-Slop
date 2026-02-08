@@ -1,0 +1,56 @@
+{
+  "name": "27-loss-delayed-appeal-decision",
+  "description": "Loss, long wait for appeal decision, win",
+  "initialFunding": 220000,
+  "minRaise": 150000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 220000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 50000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 50000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform",
+        "client"
+      ],
+      "estimatedCost": 75000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 15000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 100000,
+      "timestamp": 14000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 100000,
+      "timestamp": 14100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": ""
+}

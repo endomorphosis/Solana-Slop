@@ -1,0 +1,32 @@
+{
+  "name": "59-minimal-funding-win",
+  "description": "Minimal funding, small win",
+  "initialFunding": 30000,
+  "minRaise": 25000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 30000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 15000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 15000,
+      "timestamp": 2100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": ""
+}

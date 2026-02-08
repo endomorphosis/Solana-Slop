@@ -1,0 +1,78 @@
+{
+  "name": "47-multiple-payments-depleted",
+  "description": "Multiple payments, funds depleted",
+  "initialFunding": 180000,
+  "minRaise": 120000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 180000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 40000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 40000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 60000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 50000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 50000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 100000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 3700
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 80000,
+      "timestamp": 4000
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 6100,
+      "expectedStatus": "locked"
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": ""
+}

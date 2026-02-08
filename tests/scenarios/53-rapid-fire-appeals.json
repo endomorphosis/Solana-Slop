@@ -1,0 +1,61 @@
+{
+  "name": "53-rapid-fire-appeals",
+  "description": "Rapid succession of appeals",
+  "initialFunding": 300000,
+  "minRaise": 200000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 300000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 120000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 120000,
+      "timestamp": 2050
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 60000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 3000,
+      "timestamp": 2100
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 130000,
+      "timestamp": 2900
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2950
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": ""
+}

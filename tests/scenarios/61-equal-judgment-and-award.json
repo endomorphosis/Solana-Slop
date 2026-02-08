@@ -1,0 +1,55 @@
+{
+  "name": "61-equal-judgment-and-award",
+  "description": "Judgment equals award (break even)",
+  "initialFunding": 150000,
+  "minRaise": 100000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 150000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 50000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 50000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 45000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 50000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 50000,
+      "timestamp": 3600
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

@@ -1,0 +1,57 @@
+{
+  "name": "29-loss-reduced-judgment-appeal",
+  "description": "Loss, appeal reduces judgment amount",
+  "initialFunding": 190000,
+  "minRaise": 130000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 190000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 80000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 80000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 60000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 40000,
+      "timestamp": 3500,
+      "comment": "Judgment reduced on appeal"
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 40000,
+      "timestamp": 3600
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

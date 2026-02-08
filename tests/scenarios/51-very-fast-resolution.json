@@ -1,0 +1,26 @@
+{
+  "name": "51-very-fast-resolution",
+  "description": "Very fast case resolution",
+  "initialFunding": 120000,
+  "minRaise": 80000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 120000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1050,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "district",
+      "timestamp": 1100
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": ""
+}

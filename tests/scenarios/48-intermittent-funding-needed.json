@@ -1,0 +1,77 @@
+{
+  "name": "48-intermittent-funding-needed",
+  "description": "Some appeals need funding, others don't",
+  "initialFunding": 250000,
+  "minRaise": 160000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 250000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 100000,
+      "timestamp": 2000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 100000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 90000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 90000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 250000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 7000,
+      "timestamp": 3700
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 150000,
+      "timestamp": 4000
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 7100,
+      "expectedStatus": "locked"
+    }
+  ],
+  "expectedFinalStatus": "locked",
+  "notes": ""
+}

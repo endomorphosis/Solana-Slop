@@ -1,0 +1,80 @@
+{
+  "name": "62-cascading-losses",
+  "description": "Cascading losses with increasing judgments",
+  "initialFunding": 350000,
+  "minRaise": 220000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 350000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 30000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 30000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 70000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 60000,
+      "timestamp": 3500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 60000,
+      "timestamp": 3600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 90000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 6000,
+      "timestamp": 3700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 90000,
+      "timestamp": 5500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 90000,
+      "timestamp": 5600
+    }
+  ],
+  "expectedFinalStatus": "lost",
+  "notes": ""
+}

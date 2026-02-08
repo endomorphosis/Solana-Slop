@@ -1,0 +1,114 @@
+{
+  "name": "42-loss-appeals-to-scotus-win",
+  "description": "Loss at lower courts, win at US Supreme",
+  "initialFunding": 350000,
+  "minRaise": 220000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 350000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 70000,
+      "timestamp": 3000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 70000,
+      "timestamp": 3100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 85000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 7000,
+      "timestamp": 3200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "appellate",
+      "judgmentAmount": 80000,
+      "timestamp": 6500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 80000,
+      "timestamp": 6600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 110000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 12000,
+      "timestamp": 6700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 90000,
+      "timestamp": 11500
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 90000,
+      "timestamp": 11600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "platform"
+      ],
+      "estimatedCost": 250000,
+      "courtLevel": "us_supreme",
+      "path": "appeal",
+      "deadline": 20000,
+      "timestamp": 11700
+    },
+    {
+      "type": "contribute_to_appeal",
+      "amount": 200000,
+      "timestamp": 12000
+    },
+    {
+      "type": "evaluate_appeal",
+      "timestamp": 20100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "us_supreme",
+      "judgmentAmount": 300000,
+      "timestamp": 22000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 300000,
+      "timestamp": 22100
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": ""
+}

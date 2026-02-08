@@ -1,0 +1,50 @@
+{
+  "name": "24-loss-settlement-on-appeal",
+  "description": "Loss, appeal, settle during appellate process",
+  "initialFunding": 180000,
+  "minRaise": 120000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 180000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "loss",
+      "courtLevel": "district",
+      "judgmentAmount": 45000,
+      "timestamp": 2000
+    },
+    {
+      "type": "pay_judgment",
+      "amount": 45000,
+      "timestamp": 2100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney",
+        "client"
+      ],
+      "estimatedCost": 60000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 4000,
+      "timestamp": 2200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "settlement",
+      "courtLevel": "appellate",
+      "timestamp": 3000
+    }
+  ],
+  "expectedFinalStatus": "settled",
+  "notes": ""
+}

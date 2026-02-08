@@ -1,0 +1,101 @@
+{
+  "name": "41-win-all-courts-to-scotus",
+  "description": "Win at all levels including US Supreme",
+  "initialFunding": 400000,
+  "minRaise": 250000,
+  "events": [
+    {
+      "type": "initial_funding",
+      "amount": 400000,
+      "timestamp": 1000
+    },
+    {
+      "type": "evaluate",
+      "timestamp": 1100,
+      "expectedStatus": "locked"
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "district",
+      "judgmentAmount": 200000,
+      "timestamp": 5000
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 200000,
+      "timestamp": 5100
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "attorney"
+      ],
+      "estimatedCost": 80000,
+      "courtLevel": "appellate",
+      "path": "appeal",
+      "deadline": 10000,
+      "timestamp": 5200
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "appellate",
+      "judgmentAmount": 220000,
+      "timestamp": 9500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 20000,
+      "timestamp": 9600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "platform"
+      ],
+      "estimatedCost": 100000,
+      "courtLevel": "state_supreme",
+      "path": "appeal",
+      "deadline": 15000,
+      "timestamp": 9700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "state_supreme",
+      "judgmentAmount": 240000,
+      "timestamp": 14500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 20000,
+      "timestamp": 14600
+    },
+    {
+      "type": "approve_appeal",
+      "approvers": [
+        "client"
+      ],
+      "estimatedCost": 150000,
+      "courtLevel": "us_supreme",
+      "path": "appeal",
+      "deadline": 25000,
+      "timestamp": 14700
+    },
+    {
+      "type": "record_outcome",
+      "outcome": "win",
+      "courtLevel": "us_supreme",
+      "judgmentAmount": 260000,
+      "timestamp": 24500
+    },
+    {
+      "type": "deposit_court_award",
+      "amount": 20000,
+      "timestamp": 24600
+    }
+  ],
+  "expectedFinalStatus": "won",
+  "notes": ""
+}
