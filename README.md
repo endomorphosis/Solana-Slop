@@ -165,6 +165,98 @@ campaign.contributeToAppeal(funder, 80000);
 campaign.evaluateAppeal(); // Checks if minimum reached
 ```
 
+## Admin Dashboard
+
+The platform includes a comprehensive admin dashboard for managing campaigns, proposals, accounts, and transactions.
+
+### Features
+
+- **Proposal Review & Approval**: Review and approve/reject crowdfunding proposals submitted by clients
+- **Campaign Oversight**: Monitor all campaigns, their status, funding progress, and workflow history
+- **Account Management**: Manage user, client, and attorney accounts
+- **Transaction Tracking**: View complete transaction history including contributions, refunds, court awards, and invoice payments
+- **Dashboard Statistics**: Real-time overview of platform metrics
+
+### API Usage
+
+```typescript
+import { AdminDashboard } from "./src/admin/dashboard.js";
+import { Campaign } from "./src/crowdfunding/campaign.js";
+
+// Initialize dashboard
+const dashboard = new AdminDashboard(clock);
+
+// Register accounts
+dashboard.registerAccount("user1", "user", "John Doe", "john@example.com");
+dashboard.registerAccount("client1", "client", "Jane Smith", "jane@example.com");
+dashboard.registerAccount("attorney1", "attorney", "Bob Law", "bob@lawfirm.com");
+
+// Submit and review proposals
+dashboard.submitProposal(
+  "campaign1",
+  "client1",
+  "attorney1",
+  100000,
+  deadline,
+  "Patent infringement case"
+);
+
+dashboard.approveProposal("campaign1", "admin_wallet", "Approved");
+// or
+dashboard.rejectProposal("campaign1", "admin_wallet", "Insufficient details");
+
+// Register and monitor campaigns
+const campaign = new Campaign(config, clock);
+dashboard.registerCampaign(campaign, "campaign1");
+
+// Get campaign summary
+const summary = dashboard.getCampaignSummary("campaign1");
+
+// Track transactions
+dashboard.recordTransaction({
+  id: "tx1",
+  timestamp: Date.now(),
+  type: "contribution",
+  amount: 50000,
+  from: "user1",
+  to: "campaign1",
+  campaignId: "campaign1"
+});
+
+// View statistics
+const stats = dashboard.getDashboardStats();
+console.log(`Total raised: ${stats.totalRaised}`);
+console.log(`Pending proposals: ${stats.pendingProposals}`);
+
+// Query data
+const pendingProposals = dashboard.listProposals("pending");
+const activeCampaigns = dashboard.listCampaignsByStatus("active");
+const walletTxs = dashboard.getWalletTransactions("user1");
+```
+
+### Web Interface
+
+A demo web interface is available at `web/admin-dashboard.html`. Open it in a browser to see the dashboard UI:
+
+```bash
+# Using Python's built-in server
+python3 -m http.server 8000
+# Then visit http://localhost:8000/web/admin-dashboard.html
+
+# Or using Node.js http-server (install globally: npm i -g http-server)
+http-server
+# Then visit http://localhost:8080/web/admin-dashboard.html
+```
+
+The web interface provides:
+- **Overview tab**: Platform statistics and recent activity
+- **Proposals tab**: Review and manage proposal submissions
+- **Campaigns tab**: Monitor all campaigns and their status
+- **Accounts tab**: Manage user, client, and attorney accounts
+- **Transactions tab**: View complete transaction history
+
+*Note: The web interface is a frontend demo. In production, connect it to the AdminDashboard API via a backend service.*
+
 ## Ping Solana testnet
 ```bash
 npm run ping
